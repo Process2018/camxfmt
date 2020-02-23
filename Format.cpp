@@ -12,6 +12,30 @@ USER_DATA user_data;
 
 char m_userFormatString[64][256];
 
+string defaultCueForser[5] = {
+	{"Please input a txt file with below format:\r\n\r\n"},
+	{"0x0d34  0x3b        ------  or \r\n"},
+	{"0x0d34, 0x3b        ------  or\r\n"},
+	{"0d34	3b            \r\n\r\n"},
+	{"Below are default format for addr and data :\r\n\r\n"},
+};
+
+string default_eeprom_memoryMap_string[12] =
+{
+	{ "  <!--Sequence of register setting to configure the device -->" },
+	{ "  <memoryMap>" },
+	{ "	  <!--Contains: register address, register data, register address type, register data type," },
+	{ "	  operation and delay in micro seconds" },
+	{ "	  element for slaveAddr" },
+	{ "	  element for registerAddr" },
+	{ "	  element for registerData" },
+	{ "	  element for regAddrType" },
+	{ "	  element for regDataType" },
+	{ "	  element for operation" },
+	{ "	  element for delayUs -->" },
+	{ "  </memoryMap>" },
+};
+
 string default_eeprom_format_string[9] =
 {
 	{"	  <regSetting>"},
@@ -21,34 +45,6 @@ string default_eeprom_format_string[9] =
 	{"		<regAddrType rang=\"[1,4]\">2</regAddrType>"},
 	{"		<regDataType rang=\"[1,4]\">2</regDataType>"},
 	{"		<operation>READ</operation>"},
-	{"		<delayUs>0</delayUs>"},
-	{"	  </regSetting>"},
-};
-
-string default_eeprom_memoryMap_string[12] =
-{
-	{ "  <!--Sequence of register setting to configure the device -->" },
-	{ "  <memoryMap>" },
-	{ "  Contains: register address, register data, register address type, register data type, " },
-	{ "  operation and delay in micro seconds" },
-	{ "  element for slaveAddr" },
-	{ "  element for registerAddr" },
-	{ "  element for registerData" },
-	{ "  element for regAddrType" },
-	{ "  element for regDataType" },
-	{ "  element for operation" },
-	{ "  element for delayUs" },
-	{ "  </memoryMap>" },
-};
-
-string default_sensor_regSetting_format[20] =
-{
-	{"	  <regSetting>"},
-	{"		<registerAddr>0x0000</registerAddr>"},
-	{"		<registerData>0x00</registerData>"},
-	{"		<regAddrType rang=\"[1,4]\">2</regAddrType>"},
-	{"		<regDataType rang=\"[1,4]\">2</regDataType>"},
-	{"		<operation>WRITE</operation>"},
 	{"		<delayUs>0</delayUs>"},
 	{"	  </regSetting>"},
 };
@@ -74,6 +70,18 @@ string default_sensor_res_string[7] =
 	{ "  </resSettings>" },
 };
 
+string default_sensor_regSetting_format[8] =
+{
+	{"	  <regSetting>"},
+	{"		<registerAddr>0x0000</registerAddr>"},
+	{"		<registerData>0x00</registerData>"},
+	{"		<regAddrType rang=\"[1,4]\">2</regAddrType>"},
+	{"		<regDataType rang=\"[1,4]\">2</regDataType>"},
+	{"		<operation>WRITE</operation>"},
+	{"		<delayUs>0</delayUs>"},
+	{"	  </regSetting>"},
+};
+
 Format::Format()
 {
 }
@@ -83,7 +91,7 @@ Format::~Format()
 {
 }
 
-int write_string_to_file_append(string &filename, const string str)
+int write_string_to_file_append(string &filename, const string str)// write the data to a file in a time
 {
 	CDBG("adding str = %s \n", str.c_str());
 
@@ -91,6 +99,13 @@ int write_string_to_file_append(string &filename, const string str)
 	out.open(filename, fstream::out | fstream::app);
 	out << str;
 	out.close();
+	return 0;
+}
+
+int write_string_to_file_append(ofstream &out, const string str) // if there is no ''&'', build fail , we had't better use this function
+{
+	CDBG("adding str = %s \n", str.c_str());
+	out << str;
 	return 0;
 }
 
@@ -112,16 +127,19 @@ void Format::txt2xml_sensor(string filename, USER_DATA user_data) {
 	out.open(writefilename.c_str());
 	out.close();
 
+	//open file and update
+	out.open(writefilename, fstream::out | fstream::app);
+
 	for (int i = 0; i < 5; i++)
 	{
 		if (user_data.nRadio_select_mode == SENSOR_INIT)
 		{
-			write_string_to_file_append(writefilename, default_sensor_init_string[i]);
-			write_string_to_file_append(writefilename, "\n");
+			write_string_to_file_append(out, default_sensor_init_string[i]);
+			write_string_to_file_append(out, "\n");
 		}
 		else if (user_data.nRadio_select_mode == SENSOR_RES) {
-			write_string_to_file_append(writefilename, default_sensor_res_string[i]);
-			write_string_to_file_append(writefilename, "\n");
+			write_string_to_file_append(out, default_sensor_res_string[i]);
+			write_string_to_file_append(out, "\n");
 		}
 		else {
 			CDBG("There is nothing I can do, go back");
@@ -238,10 +256,18 @@ void Format::txt2xml_sensor(string filename, USER_DATA user_data) {
 		pos2 = (default_sensor_regSetting_format[2]).find("<", pos1);
 		default_sensor_regSetting_format[2] = (default_sensor_regSetting_format[2]).replace(pos1 + 1, pos2 - pos1 - 1, str_sub2);
 
+		pos1 = (default_sensor_regSetting_format[3]).find_first_of(">");
+		pos2 = (default_sensor_regSetting_format[3]).find("<", pos1);
+		default_sensor_regSetting_format[3] = (default_sensor_regSetting_format[3]).replace(pos1 + 1, pos2 - pos1 - 1, to_string(user_data.nRadio_addr_type));
+
+		pos1 = (default_sensor_regSetting_format[4]).find_first_of(">");
+		pos2 = (default_sensor_regSetting_format[4]).find("<", pos1);
+		default_sensor_regSetting_format[4] = (default_sensor_regSetting_format[4]).replace(pos1 + 1, pos2 - pos1 - 1, to_string(user_data.nRadio_data_type));
+
 		for (int i = 0; i < 8; i++)
 		{
-			write_string_to_file_append(writefilename, default_sensor_regSetting_format[i]);
-			write_string_to_file_append(writefilename, "\n");
+			write_string_to_file_append(out, default_sensor_regSetting_format[i]);
+			write_string_to_file_append(out, "\n");
 		}
 		goto ADD;
 	SKIP:
@@ -253,14 +279,18 @@ void Format::txt2xml_sensor(string filename, USER_DATA user_data) {
 		continue;
 	}
 	if (user_data.nRadio_select_mode == SENSOR_INIT) {
-		write_string_to_file_append(writefilename, default_sensor_init_string[5]);
-		write_string_to_file_append(writefilename, string("\n"));
-		write_string_to_file_append(writefilename, default_sensor_init_string[6]);
+		write_string_to_file_append(out, default_sensor_init_string[5]);
+		write_string_to_file_append(out, string("\n"));
+		write_string_to_file_append(out, default_sensor_init_string[6]);
 	}
 	else
 	{
-		write_string_to_file_append(writefilename, default_sensor_res_string[5]);
+		write_string_to_file_append(out, default_sensor_res_string[5]);
 	}
+
+	in.close();
+	out.flush();
+	out.close();
 	cout << "cout:txt2xml process " << line_cnt << " line for sensor done " << filename.c_str() << endl;
 	fprintf(stderr, "fprintf: txt2xml process %d line for sensor done %s\n", line_cnt, filename.c_str());
 	//DEBG("process for %s done",filename.c_str());//good	
@@ -282,6 +312,9 @@ void Format::xml2txt_sensor(string filename, USER_DATA user_data) {
 	ofstream out;
 	out.open(writefilename.c_str());
 	out.close();
+
+	//open file and update
+	out.open(writefilename, fstream::out | fstream::app);
 
 	string readfilename = filename;
 	ifstream in;
@@ -314,8 +347,8 @@ void Format::xml2txt_sensor(string filename, USER_DATA user_data) {
 							endpos = strline.find("</registerAddr>");
 							string substring = strline.substr(startpos + len, endpos - startpos - len);
 							//cout << "addr = " << substring << endl;
-							write_string_to_file_append(writefilename, substring);
-							write_string_to_file_append(writefilename, string(","));
+							write_string_to_file_append(out, substring);
+							write_string_to_file_append(out, string(","));
 						}
 						else if ((startpos = strline.find("<registerData>")) != string::npos)
 						{
@@ -323,8 +356,8 @@ void Format::xml2txt_sensor(string filename, USER_DATA user_data) {
 							endpos = strline.find("</registerData>");
 							string substring = strline.substr(startpos + len, endpos - startpos - len);
 							//cout << "data = " << substring.c_str() << endl;
-							write_string_to_file_append(writefilename, substring);
-							write_string_to_file_append(writefilename, string("\n"));
+							write_string_to_file_append(out, substring);
+							write_string_to_file_append(out, string("\n"));
 						}
 					}
 				}
@@ -336,6 +369,9 @@ void Format::xml2txt_sensor(string filename, USER_DATA user_data) {
 			}
 		}
 	}
+	in.close();
+	out.flush();
+	out.close();
 	//DEBG("process for %s done",filename.c_str());//good	
 }
 
@@ -357,12 +393,21 @@ void Format::txt2xml_eeprom(string filename, USER_DATA user_data)
 	out.open(writefilename.c_str());
 	out.close();
 
+	//open file and update
+	out.open(writefilename, fstream::out | fstream::app);
+
 	string readfilename = filename;
 	ifstream in;
 	in.open(readfilename.c_str(), std::ios::in);
 	if (!in.is_open()) {
 		cout << "open readFile Failded." << endl;
 		return;
+	}
+
+	for (int i = 0; i < 11; i++)
+	{
+		write_string_to_file_append(out, default_eeprom_memoryMap_string[i]);
+		write_string_to_file_append(out, "\n");
 	}
 
 	string strline;
@@ -452,10 +497,18 @@ void Format::txt2xml_eeprom(string filename, USER_DATA user_data)
 			pos2 = (default_eeprom_format_string[3]).find("<", pos1);
 			default_eeprom_format_string[3] = (default_eeprom_format_string[3]).replace(pos1 + 1, pos2 - pos1 - 1, str_sub2);
 
+			pos1 = (default_eeprom_format_string[4]).find_first_of(">");
+			pos2 = (default_eeprom_format_string[4]).find("<", pos1);
+			default_eeprom_format_string[4] = (default_eeprom_format_string[4]).replace(pos1 + 1, pos2 - pos1 - 1, to_string(user_data.nRadio_addr_type));
+
+			pos1 = (default_eeprom_format_string[5]).find_first_of(">");
+			pos2 = (default_eeprom_format_string[5]).find("<", pos1);
+			default_eeprom_format_string[5] = (default_eeprom_format_string[5]).replace(pos1 + 1, pos2 - pos1 - 1, to_string(user_data.nRadio_addr_type));
+
 			for (int i = 0; i < 9; i++)
 			{
-				write_string_to_file_append(writefilename, default_eeprom_format_string[i]);
-				write_string_to_file_append(writefilename, default_eeprom_format_string[i]);
+				write_string_to_file_append(out, default_eeprom_format_string[i]);
+				write_string_to_file_append(out, "\n");
 			}
 
 			goto ADD;
@@ -469,7 +522,10 @@ void Format::txt2xml_eeprom(string filename, USER_DATA user_data)
 		continue;
 	}
 
-	write_string_to_file_append(writefilename, default_eeprom_memoryMap_string[12]);
+	write_string_to_file_append(out, default_eeprom_memoryMap_string[11]);
+	in.close();
+	out.flush();
+	out.close();
 	cout << "txt2xml process " << line_cnt << " line for eeprom done " << filename.c_str() << endl;
 	fprintf(stderr, "txt2xml process %d line for eeprom done %s\n", line_cnt, filename.c_str());
 	//DEBG("process for %s done",filename.c_str());//good	
@@ -491,6 +547,9 @@ void Format::xml2txt_eeprom(string filename, USER_DATA user_data) {
 	ofstream out;
 	out.open(writefilename.c_str());
 	out.close();
+
+	//open file and update
+	out.open(writefilename, fstream::out | fstream::app);
 
 	string readfilename = filename;
 	ifstream in;
@@ -523,8 +582,8 @@ void Format::xml2txt_eeprom(string filename, USER_DATA user_data) {
 							endpos = strline.find("</registerAddr>");
 							string substring = strline.substr(startpos + len, endpos - startpos - len);
 							//cout << "addr = " << substring << endl;
-							write_string_to_file_append(writefilename, substring);
-							write_string_to_file_append(writefilename, string(","));
+							write_string_to_file_append(out, substring);
+							write_string_to_file_append(out, string(","));
 						}
 						else if ((startpos = strline.find("<registerData>")) != string::npos)
 						{
@@ -532,8 +591,8 @@ void Format::xml2txt_eeprom(string filename, USER_DATA user_data) {
 							endpos = strline.find("</registerData>");
 							string substring = strline.substr(startpos + len, endpos - startpos - len);
 							//cout << "data = " << substring.c_str() << endl;
-							write_string_to_file_append(writefilename, substring);
-							write_string_to_file_append(writefilename, string("\n"));
+							write_string_to_file_append(out, substring);
+							write_string_to_file_append(out, string("\n"));
 						}
 					}
 				}
@@ -550,6 +609,10 @@ void Format::xml2txt_eeprom(string filename, USER_DATA user_data) {
 			break;
 		}
 	}
+
+	in.close();
+	out.flush();
+	out.close();
 	//DEBG("process for %s done",filename.c_str());//good	
 }
 
@@ -951,12 +1014,4 @@ RETRY:
 	}
 #endif 
 }
-
-
-
-
-
-
-
-
 
