@@ -91,6 +91,20 @@ Format::~Format()
 {
 }
 
+wchar_t* doMultiByteToWideChar(char* cStr) {
+	int num = MultiByteToWideChar(0, 0, cStr, -1, NULL, 0);
+	wchar_t *wChar = new wchar_t[num];
+	MultiByteToWideChar(0, 0, cStr, -1, wChar, num);
+	return wChar;
+}
+
+wchar_t* doMultiByteToWideChar(string cStr) {
+	int num = MultiByteToWideChar(0, 0, cStr.c_str(), -1, NULL, 0);
+	wchar_t *wChar = new wchar_t[num];
+	MultiByteToWideChar(0, 0, cStr.c_str(), -1, wChar, num);
+	return wChar;
+}
+
 int write_string_to_file_append(string &filename, const string str)// write the data to a file in a time
 {
 	CDBG("adding str = %s \n", str.c_str());
@@ -119,7 +133,7 @@ void Format::txt2xml_sensor(string filename, USER_DATA user_data) {
 	string str_sub1 = filename.substr(0, pos_of_dog);
 	string str_sub2 = filename.substr(pos_of_dog, strlen(filename.c_str()));
 	CDBG("str_sub1 = %s str_sub2 = %s \n", str_sub1.c_str(), str_sub2.c_str());
-	string writefilename = str_sub1 + "_ouput" + ".xml";
+	string writefilename = str_sub1 + "_output" + ".xml";
 	CDBG("writefilename = %s \n", writefilename.c_str());
 
 	//clear file
@@ -807,7 +821,7 @@ string select_filepath(string srcPath, string file_string, char filename[256])
 
 	if (strcmp(".", file_list[cmd].c_str()) != 0 && strcmp("..", file_list[cmd].c_str()))
 	{
-		strncpy(filename, file_list[cmd].c_str(), strlen(file_list[cmd].c_str()));
+		strncpy_s(filename, sizeof(filename), file_list[cmd].c_str(), strlen(file_list[cmd].c_str()));
 	}
 	else if (strcmp("..", file_list[cmd].c_str()) == 0)
 	{
@@ -943,18 +957,19 @@ void test_main()
 	string path;
 	char fileName[256] = { '\0' };
 	char buffer[PATH_SIZE];
-	getcwd(buffer, PATH_SIZE);
+	_getcwd(buffer, PATH_SIZE);
 	rootPath.assign(buffer); // save root path
 	path.assign("");
 
 #define TEST 1
 #if TEST
 	FILE *fd = NULL;
+	errno_t fd_rt = 0;
 	string fileout;
 	string filePath = rootPath;
 	fileout.assign(filePath).append("\\out.txt"); /// save log to out.txt file
-	int stdout_fd = dup(fileno(stdout)); // If you use codeblock and compile fail, choice "Have gcc follow the 1999 ISO C language standard [-std = C99]"
-	if ((fd = freopen(fileout.c_str(), "w", stdout)) == NULL)
+	int stdout_fd = _dup(_fileno(stdout)); // If you use codeblock and compile fail, choice "Have gcc follow the 1999 ISO C language standard [-std = C99]"
+	if ((fd_rt = freopen_s(&fd, fileout.c_str(), "w", stdout)) != 0)
 	{
 		printf("IO err \n");
 	}
