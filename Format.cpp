@@ -10,7 +10,7 @@ using namespace std;
 
 USER_DATA user_data;
 
-char m_userFormatString[64][256];
+char m_userFormatString[64][1024];
 
 string defaultCueForser[5] = {
 	{"Please input a txt file with below format:\r\n\r\n"},
@@ -91,14 +91,14 @@ Format::~Format()
 {
 }
 
-wchar_t* doMultiByteToWideChar(char* cStr) {
+wchar_t* doMultiByteToWideChar(const char* cStr) {
 	int num = MultiByteToWideChar(0, 0, cStr, -1, NULL, 0);
 	wchar_t *wChar = new wchar_t[num];
 	MultiByteToWideChar(0, 0, cStr, -1, wChar, num);
 	return wChar;
 }
 
-wchar_t* doMultiByteToWideChar(string cStr) {
+wchar_t* doMultiByteToWideChar(const string & cStr) {
 	int num = MultiByteToWideChar(0, 0, cStr.c_str(), -1, NULL, 0);
 	wchar_t *wChar = new wchar_t[num];
 	MultiByteToWideChar(0, 0, cStr.c_str(), -1, wChar, num);
@@ -144,20 +144,37 @@ void Format::txt2xml_sensor(string filename, USER_DATA user_data) {
 	//open file and update
 	out.open(writefilename, fstream::out | fstream::app);
 
-	for (int i = 0; i < 5; i++)
+	if (user_data.nUserFormatStringLine > 0)
 	{
-		if (user_data.nRadio_select_mode == SENSOR_INIT)
+		for (int i = 0; i < user_data.nUserFormatStringLine; i++)
 		{
-			write_string_to_file_append(out, default_sensor_init_string[i]);
-			write_string_to_file_append(out, "\n");
+			string str = m_userFormatString[i];
+			CDBG("str = %s", str.c_str());
+			if (0)
+				if (user_data.nRadio_select_mode == SENSOR_INIT)
+				{
+					write_string_to_file_append(out, default_sensor_init_string[i]);
+					write_string_to_file_append(out, "\n");
+				}
 		}
-		else if (user_data.nRadio_select_mode == SENSOR_RES) {
-			write_string_to_file_append(out, default_sensor_res_string[i]);
-			write_string_to_file_append(out, "\n");
-		}
-		else {
-			CDBG("There is nothing I can do, go back");
-			return;
+	}
+	else
+	{
+		for (int i = 0; i < 5; i++)
+		{
+			if (user_data.nRadio_select_mode == SENSOR_INIT)
+			{
+				write_string_to_file_append(out, default_sensor_init_string[i]);
+				write_string_to_file_append(out, "\n");
+			}
+			else if (user_data.nRadio_select_mode == SENSOR_RES) {
+				write_string_to_file_append(out, default_sensor_res_string[i]);
+				write_string_to_file_append(out, "\n");
+			}
+			else {
+				CDBG("There is nothing I can do, go back");
+				return;
+			}
 		}
 	}
 
@@ -342,14 +359,15 @@ void Format::xml2txt_sensor(string filename, USER_DATA user_data) {
 	string strline;
 	while (getline(in, strline))
 	{
-		if (string::npos != strline.find("<initSetting>") || string::npos != strline.find("<resSetting>"))
+		CDBG("strline = %s", strline.c_str());
+		if (string::npos != strline.find("<initSettings>") || string::npos != strline.find("<resSettings>"))
 		{
-			cout << strline << endl;
+			CDBG("strline = %s", strline.c_str());
 			while (getline(in, strline))
 			{
 				if (string::npos != strline.find("<regSetting>"))
 				{
-					//cout << strline << endl;
+					CDBG("strline = %s", strline.c_str());
 					while (getline(in, strline))
 					{
 						int startpos = 0;
@@ -357,7 +375,7 @@ void Format::xml2txt_sensor(string filename, USER_DATA user_data) {
 						int len = strlen("<registerAddr>");
 						if ((startpos = strline.find("<registerAddr>")) != string::npos)
 						{
-							//cout << "strline = " << strline <<endl;
+							cout << "strline = " << strline << endl;
 							endpos = strline.find("</registerAddr>");
 							string substring = strline.substr(startpos + len, endpos - startpos - len);
 							//cout << "addr = " << substring << endl;
@@ -366,7 +384,7 @@ void Format::xml2txt_sensor(string filename, USER_DATA user_data) {
 						}
 						else if ((startpos = strline.find("<registerData>")) != string::npos)
 						{
-							//cout << "strline = " << strline <, endl;
+							cout << "strline = " << strline << endl;
 							endpos = strline.find("</registerData>");
 							string substring = strline.substr(startpos + len, endpos - startpos - len);
 							//cout << "data = " << substring.c_str() << endl;
