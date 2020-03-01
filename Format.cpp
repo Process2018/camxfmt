@@ -20,7 +20,7 @@ string defaultCueForser[5] = {
 	{"Below are default format for addr and data :\r\n\r\n"},
 };
 
-string default_eeprom_memoryMap_string[12] =
+string default_eeprom_memory_format_string[21] =
 {
 	{ "  <!--Sequence of register setting to configure the device -->" },
 	{ "  <memoryMap>" },
@@ -33,45 +33,25 @@ string default_eeprom_memoryMap_string[12] =
 	{ "	  element for regDataType" },
 	{ "	  element for operation" },
 	{ "	  element for delayUs -->" },
+		{"	  <regSetting>"},
+		{"		<slaveAddr>0xA2</slaveAddr>"},
+		{"		<registerAddr>0x00</registerAddr>"},
+		{"		<registerData>0x00</registerData>"},
+		{"		<regAddrType rang=\"[1,4]\">2</regAddrType>"},
+		{"		<regDataType rang=\"[1,4]\">2</regDataType>"},
+		{"		<operation>READ</operation>"},
+		{"		<delayUs>0</delayUs>"},
+		{"	  </regSetting>"},
 	{ "  </memoryMap>" },
 };
 
-string default_eeprom_format_string[9] =
-{
-	{"	  <regSetting>"},
-	{"		<slaveAddr>0xA2</slaveAddr>"},
-	{"		<registerAddr>0x00</registerAddr>"},
-	{"		<registerData>0x00</registerData>"},
-	{"		<regAddrType rang=\"[1,4]\">2</regAddrType>"},
-	{"		<regDataType rang=\"[1,4]\">2</regDataType>"},
-	{"		<operation>READ</operation>"},
-	{"		<delayUs>0</delayUs>"},
-	{"	  </regSetting>"},
-};
-
-string default_sensor_init_string[7] =
+string default_sensor_init_format_string[15] =
 {
 	{ "  <!--Sequence of register setting to configure the device -->" },
 	{ "  <initSettings>" },
 	{ "  	<!--Specify which sensor version can support this setting-->" },
 	{ "  	<sensorVersion>0</sensorVersion>" },
 	{ "  	<initSetting>" },
-	{ "  	</initSetting>" },
-	{ "  </initSettings>" },
-};
-
-string default_sensor_res_string[7] =
-{
-	{ "  <!--Sequence of register setting to configure the device -->" },
-	{ "  <resSettings>" },
-	{ "  	<!--Register setting configuration" },
-	{ "  		Contains: register address, register data, register address type, register data type" },
-	{ "  		operation and delay in micro seconds -->" },
-	{ "  </resSettings>" },
-};
-
-string default_sensor_regSetting_format[8] =
-{
 	{"	  <regSetting>"},
 	{"		<registerAddr>0x0000</registerAddr>"},
 	{"		<registerData>0x00</registerData>"},
@@ -80,6 +60,26 @@ string default_sensor_regSetting_format[8] =
 	{"		<operation>WRITE</operation>"},
 	{"		<delayUs>0</delayUs>"},
 	{"	  </regSetting>"},
+	{ "  	</initSetting>" },
+	{ "  </initSettings>" },
+};
+
+string default_sensor_res_format_string[15] =
+{
+	{ "  <!--Sequence of register setting to configure the device -->" },
+	{ "  <resSettings>" },
+	{ "  	<!--Register setting configuration" },
+	{ "  		Contains: register address, register data, register address type, register data type" },
+	{ "  		operation and delay in micro seconds -->" },
+		{"	  <regSetting>"},
+		{"		<registerAddr>0x0000</registerAddr>"},
+		{"		<registerData>0x00</registerData>"},
+		{"		<regAddrType rang=\"[1,4]\">2</regAddrType>"},
+		{"		<regDataType rang=\"[1,4]\">2</regDataType>"},
+		{"		<operation>WRITE</operation>"},
+		{"		<delayUs>0</delayUs>"},
+		{"	  </regSetting>"},
+	{ "  </resSettings>" },
 };
 
 Format::Format()
@@ -107,7 +107,7 @@ wchar_t* doMultiByteToWideChar(const string & cStr) {
 
 int write_string_to_file_append(string &filename, const string str)// write the data to a file in a time
 {
-	CDBG("adding str = %s \n", str.c_str());
+	DBG("adding str = %s \n", str.c_str());
 
 	ofstream out;
 	out.open(filename, fstream::out | fstream::app);
@@ -118,23 +118,33 @@ int write_string_to_file_append(string &filename, const string str)// write the 
 
 int write_string_to_file_append(ofstream &out, const string str) // if there is no ''&'', build fail , we had't better use this function
 {
-	CDBG("adding str = %s \n", str.c_str());
+	DBG("adding str = %s \n", str.c_str());
 	out << str;
 	return 0;
 }
 
-//how to skip string except addr like 0xAAAA ?
+string replace_with_substr(string strline, string substr)
+{
+	int pos1 = strline.find_first_of(">");
+	int pos2 = strline.find("<", pos1);
 
-void Format::txt2xml_sensor(string filename, USER_DATA user_data) {
+	string strRt = strline.replace(pos1 + 1, pos2 - pos1 - 1, substr);
+	DBG("strRt = %s \n", strRt.c_str());
+	return strRt;
+}
+
+
+//how to skip string except addr like 0xAAAA ?
+void Format::txt2xml_for_modules(string filename, USER_DATA user_data) {
 	printf_err(filename);
-	//DEBG("start processing for %s",filename.c_str());//good
+	//SDBG("start processing for %s",filename.c_str());//good
 
 	int pos_of_dog = find_pos_substr(filename, ".");
 	string str_sub1 = filename.substr(0, pos_of_dog);
 	string str_sub2 = filename.substr(pos_of_dog, strlen(filename.c_str()));
-	CDBG("str_sub1 = %s str_sub2 = %s \n", str_sub1.c_str(), str_sub2.c_str());
+	DBG("str_sub1 = %s str_sub2 = %s \n", str_sub1.c_str(), str_sub2.c_str());
 	string writefilename = str_sub1 + "_output" + ".xml";
-	CDBG("writefilename = %s \n", writefilename.c_str());
+	DBG("writefilename = %s \n", writefilename.c_str());
 
 	//clear file
 	ofstream out;
@@ -144,39 +154,90 @@ void Format::txt2xml_sensor(string filename, USER_DATA user_data) {
 	//open file and update
 	out.open(writefilename, fstream::out | fstream::app);
 
+
+	string formatStr = "";
+	int regSetting_pos_start = 0;
+	int regSetting_pos_end = 0;
+	int regSetting_pos_end_use = 0;
+	int registerAddr_pos = 0;
+	int registerData_pos = 0;
+	int regAddrType_pos = 0;
+	int regDataType_pos = 0;
+
+	int nFomatStringLineCnt = 0;
+
+	if (user_data.nRadio_select_mode == SENSOR_INIT || user_data.nRadio_select_mode == SENSOR_RES)
+	{
+		nFomatStringLineCnt = 15;
+	}
+	else if (user_data.nRadio_select_mode == EEPROM) {
+		nFomatStringLineCnt = 21;
+	}
+
 	if (user_data.nUserFormatStringLine > 0)
 	{
-		for (int i = 0; i < user_data.nUserFormatStringLine; i++)
-		{
-			string str = m_userFormatString[i];
-			CDBG("str = %s", str.c_str());
-			if (0)
-				if (user_data.nRadio_select_mode == SENSOR_INIT)
-				{
-					write_string_to_file_append(out, default_sensor_init_string[i]);
-					write_string_to_file_append(out, "\n");
-				}
-		}
+		nFomatStringLineCnt = user_data.nUserFormatStringLine;
 	}
-	else
+
+	for (int i = regSetting_pos_start; i < nFomatStringLineCnt; i++)
 	{
-		for (int i = 0; i < 5; i++)
+		if (user_data.nUserFormatStringLine > 0)
+		{
+			formatStr = m_userFormatString[i];
+
+		}
+		else
 		{
 			if (user_data.nRadio_select_mode == SENSOR_INIT)
 			{
-				write_string_to_file_append(out, default_sensor_init_string[i]);
-				write_string_to_file_append(out, "\n");
+				formatStr = default_sensor_init_format_string[i];
 			}
 			else if (user_data.nRadio_select_mode == SENSOR_RES) {
-				write_string_to_file_append(out, default_sensor_res_string[i]);
-				write_string_to_file_append(out, "\n");
+				formatStr = default_sensor_res_format_string[i];
+			}
+			else if (user_data.nRadio_select_mode == EEPROM) {
+				formatStr = default_eeprom_memory_format_string[i];
 			}
 			else {
-				CDBG("There is nothing I can do, go back");
+				DBG("There is nothing I can do, go back");
 				return;
 			}
 		}
+
+		DBG("user setting str = %s", formatStr.c_str());
+		if (string::npos != formatStr.find("<regSetting>"))
+		{
+			regSetting_pos_start = i;
+
+		}
+		else if (string::npos != formatStr.find("<registerAddr>"))
+		{
+			registerAddr_pos = i;
+		}
+		else if (string::npos != formatStr.find("<registerData>"))
+		{
+			registerData_pos = i;
+		}
+		else if (string::npos != formatStr.find("<regAddrType"))
+		{
+			regAddrType_pos = i;
+		}
+		else if (string::npos != formatStr.find("<regDataType"))
+		{
+			regDataType_pos = i;
+		}
+		else if (string::npos != formatStr.find("</regSetting>"))
+		{
+			regSetting_pos_end = i;
+			break;
+		}
+		if (regSetting_pos_start == 0)
+		{
+			write_string_to_file_append(out, formatStr);
+			write_string_to_file_append(out, "\n");
+		}
 	}
+	DBG("regSetting_pos_start=%d regSetting_pos_end=%d", regSetting_pos_start, regSetting_pos_end);
 
 	string readfilename = filename;
 	ifstream in;
@@ -190,6 +251,15 @@ void Format::txt2xml_sensor(string filename, USER_DATA user_data) {
 	int line_cnt = 0;
 	while (getline(in, strline))
 	{
+		if (user_data.nRadio_select_mode == EEPROM) {
+			static int num_of_memory_block = 0;
+			if (strncmp("block", strline.c_str(), 5) == 0)
+			{
+				num_of_memory_block++;
+				DBG("strline = %s num_of_memory_block=%d\n", strline.c_str(), num_of_memory_block);
+				continue;
+			}
+		}
 		int pos1 = 0;
 		int pos2 = 0;
 		int pos3 = 0;
@@ -198,7 +268,7 @@ void Format::txt2xml_sensor(string filename, USER_DATA user_data) {
 		string str_sub = strline.substr(0, 2);
 		line_cnt++;
 		int flag = 1;
-		CDBG("strline = %s str_sub = %s\n", strline.c_str(), str_sub.c_str());
+		DBG("strline = %s str_sub = %s\n", strline.c_str(), str_sub.c_str());
 		int len = strline.length(); // or strline.size()
 
 		if ((strcmp(str_sub.c_str(), "0x") == 0) && (strline.find(",", 0)) != string::npos) // for 0x1234, 1234 or 0x1234 1234 case
@@ -211,16 +281,16 @@ void Format::txt2xml_sensor(string filename, USER_DATA user_data) {
 					pos2 = strline.find_first_of("	");
 				if (pos2 == string::npos)
 				{
-					CDBG("This line has some problem, goto skip pos1=%d pos2=%d", pos1, pos2);
+					DBG("This line has some problem, goto skip pos1=%d pos2=%d", pos1, pos2);
 					goto SKIP;
 				}
 			}
 			pos3 = strline.find_last_of("x");
-			CDBG("pos1=%d pos2=%d pos3=%d \n", pos1, pos2, pos3);
+			DBG("pos1=%d pos2=%d pos3=%d \n", pos1, pos2, pos3);
 			str_sub1 = strline.substr(pos1 - 1, pos2);
 			str_sub2 = strline.substr(pos3 - 1, len);
 			flag = 5;
-			CDBG("str_sub1=%s str_sub2=%s str_sub=%s\n", str_sub1.c_str(), str_sub2.c_str(), str_sub.c_str());
+			DBG("str_sub1=%s str_sub2=%s str_sub=%s\n", str_sub1.c_str(), str_sub2.c_str(), str_sub.c_str());
 		}
 		else if ((strcmp(str_sub.c_str(), "0x") == 0) && (strline.find("0x", 2)) != string::npos)// for 0x1234 0x1234 or 0x1234, 0x1234 case
 		{
@@ -233,16 +303,16 @@ void Format::txt2xml_sensor(string filename, USER_DATA user_data) {
 				if (pos2 == string::npos)
 
 				{
-					CDBG("This line has some problem, goto skip pos1=%d pos2=%d", pos1, pos2);
+					DBG("This line has some problem, goto skip pos1=%d pos2=%d", pos1, pos2);
 					goto SKIP;
 				}
 			}
 			pos3 = strline.find_last_of("x");
-			CDBG("pos1=%d pos2=%d pos3=%d \n", pos1, pos2, pos3);
+			DBG("pos1=%d pos2=%d pos3=%d \n", pos1, pos2, pos3);
 			str_sub1 = strline.substr(pos1 - 1, pos2);
 			str_sub2 = strline.substr(pos3 - 1, len);
 			flag = 5;
-			CDBG("str_sub1=%s str_sub2=%s str_sub=%s\n", str_sub1.c_str(), str_sub2.c_str(), str_sub.c_str());
+			DBG("str_sub1=%s str_sub2=%s str_sub=%s\n", str_sub1.c_str(), str_sub2.c_str(), str_sub.c_str());
 		}
 		else //For there is no 0x -- orignal
 		{
@@ -253,7 +323,7 @@ void Format::txt2xml_sensor(string filename, USER_DATA user_data) {
 			{
 				if (strline[i] < 'Z' && strline[i] > 'F' || strline[i] < 'z' && strline[i] > 'f')
 				{
-					CDBG("This line has some problem with elem %d", i);
+					DBG("This line has some problem with elem %d", i);
 					goto SKIP;
 				}
 				if (strline[i] >= 'A' && strline[i] <= 'F' || strline[i] >= 'a' && strline[i] <= 'f' || strline[i] >= '0' && strline[i] <= '9')
@@ -271,7 +341,7 @@ void Format::txt2xml_sensor(string filename, USER_DATA user_data) {
 					flag = 2;
 				}
 			}
-			CDBG("str_sub1=%s str_sub2=%s str_sub=%s \n", str_sub1.c_str(), str_sub2.c_str(), str_sub.c_str());
+			DBG("str_sub1=%s str_sub2=%s str_sub=%s \n", str_sub1.c_str(), str_sub2.c_str(), str_sub.c_str());
 		}
 
 		if (flag == 1)
@@ -279,58 +349,98 @@ void Format::txt2xml_sensor(string filename, USER_DATA user_data) {
 			cout << "There is no data in this line, check next line" << endl;
 			continue;
 		}
-		pos1 = (default_sensor_regSetting_format[1]).find_first_of(">");
-		pos2 = (default_sensor_regSetting_format[1]).find("<", pos1);
-		default_sensor_regSetting_format[1] = (default_sensor_regSetting_format[1]).replace(pos1 + 1, pos2 - pos1 - 1, str_sub1);
 
-		pos1 = (default_sensor_regSetting_format[2]).find_first_of(">");
-		pos2 = (default_sensor_regSetting_format[2]).find("<", pos1);
-		default_sensor_regSetting_format[2] = (default_sensor_regSetting_format[2]).replace(pos1 + 1, pos2 - pos1 - 1, str_sub2);
 
-		pos1 = (default_sensor_regSetting_format[3]).find_first_of(">");
-		pos2 = (default_sensor_regSetting_format[3]).find("<", pos1);
-		default_sensor_regSetting_format[3] = (default_sensor_regSetting_format[3]).replace(pos1 + 1, pos2 - pos1 - 1, to_string(user_data.nRadio_addr_type));
-
-		pos1 = (default_sensor_regSetting_format[4]).find_first_of(">");
-		pos2 = (default_sensor_regSetting_format[4]).find("<", pos1);
-		default_sensor_regSetting_format[4] = (default_sensor_regSetting_format[4]).replace(pos1 + 1, pos2 - pos1 - 1, to_string(user_data.nRadio_data_type));
-
-		for (int i = 0; i < 8; i++)
+		for (int i = regSetting_pos_start; i < regSetting_pos_end + 1; i++)
 		{
-			write_string_to_file_append(out, default_sensor_regSetting_format[i]);
+			if (user_data.nUserFormatStringLine > 0)
+			{
+
+				formatStr = m_userFormatString[i];
+			}
+			else if (user_data.nRadio_select_mode == SENSOR_INIT) {
+				formatStr = default_sensor_init_format_string[i];
+			}
+			else if (user_data.nRadio_select_mode == SENSOR_RES)
+			{
+				formatStr = default_sensor_res_format_string[i];
+			}
+			else if (user_data.nRadio_select_mode == EEPROM) {
+				formatStr = default_eeprom_memory_format_string[i];
+			}
+			else {
+				DBG("There is nothing I can do, go back");
+				return;
+			}
+
+			string newStr = formatStr;
+			DBG("format str = %s", formatStr.c_str());
+
+			if (registerAddr_pos == i)
+			{
+				newStr = replace_with_substr(formatStr, str_sub1);
+			}
+			else if (registerData_pos == i)
+			{
+				newStr = replace_with_substr(formatStr, str_sub2);
+			}
+			else if (regAddrType_pos == i)
+			{
+				newStr = replace_with_substr(formatStr, to_string(user_data.nRadio_addr_type));
+			}
+			else if (regDataType_pos == i)
+			{
+				newStr = replace_with_substr(formatStr, to_string(user_data.nRadio_data_type));
+			}
+			write_string_to_file_append(out, newStr);
 			write_string_to_file_append(out, "\n");
 		}
 		goto ADD;
 	SKIP:
-		CDBG("skip strline = %s \n", strline.c_str());
+		DBG("skip strline = %s \n", strline.c_str());
 		continue;
 
 	ADD:
-		CDBG("add strline = %s \n", strline.c_str());
+		DBG("add strline = %s \n", strline.c_str());
 		continue;
 	}
-	if (user_data.nRadio_select_mode == SENSOR_INIT) {
-		write_string_to_file_append(out, default_sensor_init_string[5]);
-		write_string_to_file_append(out, string("\n"));
-		write_string_to_file_append(out, default_sensor_init_string[6]);
-	}
-	else
-	{
-		write_string_to_file_append(out, default_sensor_res_string[5]);
-	}
 
+	for (int i = regSetting_pos_end + 1; i < nFomatStringLineCnt; i++)
+	{
+
+		if (user_data.nUserFormatStringLine > 0)
+		{
+			formatStr = m_userFormatString[i];
+		}
+		else if (user_data.nRadio_select_mode == SENSOR_INIT)
+		{
+			formatStr = default_sensor_init_format_string[i];
+		}
+		else if (user_data.nRadio_select_mode == SENSOR_RES)
+		{
+			formatStr = default_sensor_res_format_string[i];
+		}
+		else if (user_data.nRadio_select_mode == EEPROM)
+		{
+			formatStr = default_eeprom_memory_format_string[i];
+		}
+		if (formatStr.size() > 0) {
+			write_string_to_file_append(out, formatStr);
+			write_string_to_file_append(out, "\n");
+		}
+	}
 	in.close();
 	out.flush();
 	out.close();
 	cout << "cout:txt2xml process " << line_cnt << " line for sensor done " << filename.c_str() << endl;
 	fprintf(stderr, "fprintf: txt2xml process %d line for sensor done %s\n", line_cnt, filename.c_str());
-	//DEBG("process for %s done",filename.c_str());//good	
+	//SDBG("process for %s done",filename.c_str());//good	
 }
 
-void Format::xml2txt_sensor(string filename, USER_DATA user_data) {
+void Format::xml2txt_for_modules(string filename, USER_DATA user_data) {
 	printf_err(filename);
-	//DEBG(filename.c_str());//good
-	//DEBG("start processing for %s",filename.c_str());//good
+	//SDBG(filename.c_str());//good
+	//SDBG("start processing for %s",filename.c_str());//good
 
 	int pos_of_dog = find_pos_substr(filename, ".");
 	string str_sub1 = filename.substr(0, pos_of_dog);
@@ -359,15 +469,15 @@ void Format::xml2txt_sensor(string filename, USER_DATA user_data) {
 	string strline;
 	while (getline(in, strline))
 	{
-		CDBG("strline = %s", strline.c_str());
-		if (string::npos != strline.find("<initSettings>") || string::npos != strline.find("<resSettings>"))
+		DBG("strline = %s", strline.c_str());
+		if (string::npos != strline.find("<initSettings>") || string::npos != strline.find("<resSettings>") || string::npos != strline.find("<memoryMap>"))
 		{
-			CDBG("strline = %s", strline.c_str());
+			DBG("strline = %s", strline.c_str());
 			while (getline(in, strline))
 			{
 				if (string::npos != strline.find("<regSetting>"))
 				{
-					CDBG("strline = %s", strline.c_str());
+					DBG("strline = %s", strline.c_str());
 					while (getline(in, strline))
 					{
 						int startpos = 0;
@@ -380,7 +490,7 @@ void Format::xml2txt_sensor(string filename, USER_DATA user_data) {
 							string substring = strline.substr(startpos + len, endpos - startpos - len);
 							//cout << "addr = " << substring << endl;
 							write_string_to_file_append(out, substring);
-							write_string_to_file_append(out, string(","));
+							write_string_to_file_append(out, ",");
 						}
 						else if ((startpos = strline.find("<registerData>")) != string::npos)
 						{
@@ -389,7 +499,7 @@ void Format::xml2txt_sensor(string filename, USER_DATA user_data) {
 							string substring = strline.substr(startpos + len, endpos - startpos - len);
 							//cout << "data = " << substring.c_str() << endl;
 							write_string_to_file_append(out, substring);
-							write_string_to_file_append(out, string("\n"));
+							write_string_to_file_append(out, "\n");
 						}
 					}
 				}
@@ -400,252 +510,16 @@ void Format::xml2txt_sensor(string filename, USER_DATA user_data) {
 				}
 			}
 		}
-	}
-	in.close();
-	out.flush();
-	out.close();
-	//DEBG("process for %s done",filename.c_str());//good	
-}
-
-void Format::txt2xml_eeprom(string filename, USER_DATA user_data)
-{
-	printf_err(filename.c_str());
-	//DEBG("user_data.nRadio_select_mode = %d %s\n", user_data.nRadio_select_mode, filename.c_str());//some problem
-	//DEBG("start processing for %s",filename.c_str());//good	
-
-	int pos_of_dog = find_pos_substr(filename, ".");
-	string str_sub1 = filename.substr(0, pos_of_dog);
-	string str_sub2 = filename.substr(pos_of_dog, strlen(filename.c_str()));
-	cout << "str_sub = " << str_sub1 << " str_sub2 = " << str_sub2 << endl;
-	string writefilename = str_sub1 + "_output" + ".xml";
-	cout << "writefilename = " << writefilename << endl;
-
-	//clear file
-	ofstream out;
-	out.open(writefilename.c_str());
-	out.close();
-
-	//open file and update
-	out.open(writefilename, fstream::out | fstream::app);
-
-	string readfilename = filename;
-	ifstream in;
-	in.open(readfilename.c_str(), std::ios::in);
-	if (!in.is_open()) {
-		cout << "open readFile Failded." << endl;
-		return;
-	}
-
-	for (int i = 0; i < 11; i++)
-	{
-		write_string_to_file_append(out, default_eeprom_memoryMap_string[i]);
-		write_string_to_file_append(out, "\n");
-	}
-
-	string strline;
-	int line_cnt = 0;
-	while (getline(in, strline))
-	{
-		cout << strline.c_str() << endl;
-		int num_block = 0;
-		if (strncmp("block", strline.c_str(), 5) == 0)
+		else if (string::npos != strline.find("</initSettings>") || string::npos != strline.find("</resSettings>") || string::npos != strline.find("</memoryMap>"))
 		{
-			num_block++;
-		}
-		else {
-			cout << strline << endl;
-			int pos1 = 0;
-			int pos2 = 0;
-			int pos3 = 0;
-			string str_sub1;
-			string str_sub2;
-			string str_sub = strline.substr(0, 2);
-			line_cnt++;
-			int flag = 1;
-			int len = strline.length(); // or strline.size()
-
-			if (strcmp(str_sub.c_str(), "0x") == 0)// 0x1234, 0x1234 or 0x1234 0x1234 case
-			{
-				pos1 = strline.find_first_of("x");
-				pos2 = strline.find_first_of(",");//if there is no ',', check if there is empty space
-				if (pos2 == string::npos)
-				{
-					if ((pos2 = strline.find_first_of(" ")) == string::npos)
-						pos2 = strline.find_first_of("	");
-					if (pos2 == string::npos)
-
-					{
-						CDBG("This line has some problem, goto skip pos1=%d pos2=%d", pos1, pos2);
-						goto SKIP;
-					}
-				}
-				pos3 = strline.find_last_of("x");
-				CDBG("pos1=%d pos2=%d pos3=%d \n", pos1, pos2, pos3);
-				str_sub1 = strline.substr(pos1 - 1, pos2);
-				str_sub2 = strline.substr(pos3 - 1, len);
-				flag = 5;
-				CDBG("str_sub1=%s str_sub2=%s str_sub=%s\n", str_sub1.c_str(), str_sub2.c_str(), str_sub.c_str());
-			}
-			else //For there is no 0x -- orignal
-			{
-				str_sub1 += "0x";
-				str_sub2 += "0x";
-				//int len = strline.length(); // or strline.size()
-				for (int i = 0; i < len; i++)
-				{
-					if (strline[i] < 'Z' && strline[i] > 'F' || strline[i] < 'z' && strline[i] > 'f')
-					{
-						CDBG("This line has some problem with elem %d", i);
-						goto SKIP;
-					}
-					if (strline[i] >= 'A' && strline[i] <= 'F' || strline[i] >= 'a' && strline[i] <= 'f' || strline[i] >= '0' && strline[i] <= '9')
-					{
-						if (flag == 1 || flag == 3) //flag == 3 means str1 filled
-						{
-							str_sub1 += strline[i];
-							flag = 3;
-						}
-						else if (flag == 2)
-							str_sub2 += strline[i];
-					}
-					else if ((strline[i] < 48 || (strline[i] > 57 && strline[i] < 65) || (strline[i] > 90 && strline[i] < 97) || strline[i] > 122) && flag == 3)
-					{
-						flag = 2;
-					}
-				}
-				CDBG("str_sub1=%s str_sub2=%s str_sub=%s \n", str_sub1.c_str(), str_sub2.c_str(), str_sub.c_str());
-			}
-
-			if (flag == 1)
-			{
-				cout << "There is no data in this line, check next line" << endl;
-				continue;
-			}
-			pos1 = (default_eeprom_format_string[2]).find_first_of(">");
-			pos2 = (default_eeprom_format_string[2]).find("<", pos1);
-			default_eeprom_format_string[2] = (default_eeprom_format_string[2]).replace(pos1 + 1, pos2 - pos1 - 1, str_sub1);
-
-			pos1 = (default_eeprom_format_string[3]).find_first_of(">");
-			pos2 = (default_eeprom_format_string[3]).find("<", pos1);
-			default_eeprom_format_string[3] = (default_eeprom_format_string[3]).replace(pos1 + 1, pos2 - pos1 - 1, str_sub2);
-
-			pos1 = (default_eeprom_format_string[4]).find_first_of(">");
-			pos2 = (default_eeprom_format_string[4]).find("<", pos1);
-			default_eeprom_format_string[4] = (default_eeprom_format_string[4]).replace(pos1 + 1, pos2 - pos1 - 1, to_string(user_data.nRadio_addr_type));
-
-			pos1 = (default_eeprom_format_string[5]).find_first_of(">");
-			pos2 = (default_eeprom_format_string[5]).find("<", pos1);
-			default_eeprom_format_string[5] = (default_eeprom_format_string[5]).replace(pos1 + 1, pos2 - pos1 - 1, to_string(user_data.nRadio_addr_type));
-
-			for (int i = 0; i < 9; i++)
-			{
-				write_string_to_file_append(out, default_eeprom_format_string[i]);
-				write_string_to_file_append(out, "\n");
-			}
-
-			goto ADD;
-		}
-	SKIP:
-		CDBG("skip strline = %s \n", strline.c_str());
-		continue;
-
-	ADD:
-		CDBG("add strline = %s \n", strline.c_str());
-		continue;
-	}
-
-	write_string_to_file_append(out, default_eeprom_memoryMap_string[11]);
-	in.close();
-	out.flush();
-	out.close();
-	cout << "txt2xml process " << line_cnt << " line for eeprom done " << filename.c_str() << endl;
-	fprintf(stderr, "txt2xml process %d line for eeprom done %s\n", line_cnt, filename.c_str());
-	//DEBG("process for %s done",filename.c_str());//good	
-}
-void Format::xml2txt_eeprom(string filename, USER_DATA user_data) {
-	printf_err(filename.c_str());
-	//DEBG("user_data.nRadio_select_mode = %d %s\n", user_data.nRadio_select_mode , filename.c_str());//some problem
-	//DEBG("start processing for %s ",filename.c_str());//good
-
-	int pos_of_dog = find_pos_substr(filename, ".");
-	string str_sub1 = filename.substr(0, pos_of_dog);
-	string str_sub2 = filename.substr(pos_of_dog, strlen(filename.c_str()));
-	cout << "str_sub1 = " << str_sub1 << " str_sub2 = " << str_sub2 << endl;
-
-	string writefilename = str_sub1 + "_output" + ".txt";
-	cout << "writefilename = " << writefilename << endl;
-
-	//clear file
-	ofstream out;
-	out.open(writefilename.c_str());
-	out.close();
-
-	//open file and update
-	out.open(writefilename, fstream::out | fstream::app);
-
-	string readfilename = filename;
-	ifstream in;
-	in.open(readfilename.c_str(), std::ios::in);
-	if (!in.is_open())
-	{
-		cout << "open readFile Failed." << endl;
-		return;
-	}
-
-	cout << "open read xml File success." << endl;
-
-	string strline;
-	while (getline(in, strline))
-	{
-		if (string::npos != strline.find("<memoryMap>"))
-		{
-			while (getline(in, strline))
-			{
-				if (string::npos != strline.find("<regSetting>"))
-				{
-					while (getline(in, strline))
-					{
-						int startpos = 0;
-						int endpos = 0;
-						int len = strlen("<registerAddr>");
-						if ((startpos = strline.find("<registerAddr>")) != string::npos)
-						{
-							//cout << "strline = " << strline <<endl;
-							endpos = strline.find("</registerAddr>");
-							string substring = strline.substr(startpos + len, endpos - startpos - len);
-							//cout << "addr = " << substring << endl;
-							write_string_to_file_append(out, substring);
-							write_string_to_file_append(out, string(","));
-						}
-						else if ((startpos = strline.find("<registerData>")) != string::npos)
-						{
-							//cout << "strline = " << strline <, endl;
-							endpos = strline.find("</registerData>");
-							string substring = strline.substr(startpos + len, endpos - startpos - len);
-							//cout << "data = " << substring.c_str() << endl;
-							write_string_to_file_append(out, substring);
-							write_string_to_file_append(out, string("\n"));
-						}
-					}
-				}
-				else if (string::npos != strline.find("</regSetting>"))
-				{
-					cout << "got to </regSetting>" << endl;
-					break;
-				}
-			}
-		}
-		else if (string::npos != strline.find("</memoryMap>"))
-		{
-			cout << "got to </memoryMap>" << endl;
+			cout << "got to </memoryMap> or </initSettings> or </resSettings>" << endl;
 			break;
 		}
 	}
-
 	in.close();
 	out.flush();
 	out.close();
-	//DEBG("process for %s done",filename.c_str());//good	
+	//SDBG("process for %s done",filename.c_str());//good	
 }
 
 void check_bit(int data, int data_mask)
@@ -653,11 +527,11 @@ void check_bit(int data, int data_mask)
 	int reg_data = 15;
 	if (data == (reg_data & ~data_mask))
 	{
-		CDBG("it is match ~data_mask = 0x%x\n", ~data_mask);
+		DBG("it is match ~data_mask = 0x%x\n", ~data_mask);
 	}
 	else
 	{
-		CDBG("it does not match ~data_mask=0x%x\n", ~data_mask);
+		DBG("it does not match ~data_mask=0x%x\n", ~data_mask);
 	}
 }
 
@@ -666,7 +540,7 @@ unsigned int find_pos_substr(string src_str, string sub_str)
 	unsigned int pos = -1;
 	if ((pos = src_str.find(sub_str, 0)) != string::npos) //从字符串src_str 下标0开始，查找字符串sub_str ,返回sub_strs 在src_str 中的下标, 注意放括号
 	{
-		CDBG("pos = %d src_str=%s sub_str=%s\n", pos, src_str.c_str(), sub_str.c_str());
+		DBG("pos = %d src_str=%s sub_str=%s\n", pos, src_str.c_str(), sub_str.c_str());
 	}
 	return pos;
 }
@@ -680,12 +554,12 @@ bool is_file(string fileName)
 	result = _stat(fileName.c_str(), &buf);
 	if (_S_IFDIR & buf.st_mode)
 	{
-		CDBG("This is a folder name = %s \n", fileName.c_str());
+		DBG("This is a folder name = %s \n", fileName.c_str());
 		return false;
 	}
 	else if (_S_IFREG & buf.st_mode)
 	{
-		CDBG("This is a file name = %s \n", fileName.c_str());
+		DBG("This is a file name = %s \n", fileName.c_str());
 		return true;
 	}
 }
@@ -709,13 +583,13 @@ void getFiles(string path, string path2, vector<string> & files, bool add_folder
 				}
 				else {
 					files.push_back(p.assign(fileinfo.name));
-					CDBG("fileinfo.name = %s \n", fileinfo.name);
+					DBG("fileinfo.name = %s \n", fileinfo.name);
 				}
 			}
 			else
 			{
 				files.push_back(p.assign(fileinfo.name));
-				CDBG("fileinfo.name = %s \n", fileinfo.name);
+				DBG("fileinfo.name = %s \n", fileinfo.name);
 			}
 		} while (_findnext(hFile, &fileinfo) == 0);
 		_findclose(hFile);
@@ -765,7 +639,7 @@ string select_filepath(string srcPath, string file_string, char filename[256])
 #if defined(HARDCODE)
 	dstPath.assign(srcPath).append("\\data\\s5k3l6");
 #else
-	CDBG("srcPath = %s file_string=%s length = %d \n", srcPath.c_str(), file_string.c_str(), file_string.length());
+	DBG("srcPath = %s file_string=%s length = %d \n", srcPath.c_str(), file_string.c_str(), file_string.length());
 	int cmd = -1;
 	int retry = 0;
 	int isGoback = 0;
@@ -774,20 +648,20 @@ string select_filepath(string srcPath, string file_string, char filename[256])
 	if (file_string.length() == 0)
 	{
 		dstPath.assign(srcPath).append(subFolder);
-		CDBG("subFolder %s : \n", subFolder.c_str());
+		DBG("subFolder %s : \n", subFolder.c_str());
 	}
 	else if (!strcmp("..", file_string.c_str()))
 	{
 		isGoback += 1;
-		CDBG("srcPath=%s file_string=%s isGoback = %d \n", srcPath.c_str(), file_string.c_str(), isGoback);
+		DBG("srcPath=%s file_string=%s isGoback = %d \n", srcPath.c_str(), file_string.c_str(), isGoback);
 	}
 	else if (file_string.length() == srcPath.length() && string::npos != file_string.find(srcPath)) // file_string include srcPath
 	{
-		CDBG("Root path, can not go back srcPath = %s file_string = %s \n", srcPath.c_str(), file_string.c_str());
+		DBG("Root path, can not go back srcPath = %s file_string = %s \n", srcPath.c_str(), file_string.c_str());
 	}
 	else
 	{
-		CDBG("Input wrong srcPath=%s file_string=%s \n", srcPath.c_str(), file_string.c_str());
+		DBG("Input wrong srcPath=%s file_string=%s \n", srcPath.c_str(), file_string.c_str());
 	}
 
 	vector <string> file_list;
@@ -820,7 +694,7 @@ string select_filepath(string srcPath, string file_string, char filename[256])
 
 	while ((cmd >= size || cmd < 0) && retry < 3)
 	{
-		CDBG("Pick one file or folder : \n");
+		DBG("Pick one file or folder : \n");
 		cin >> cmd;
 		retry++;
 	}
@@ -830,7 +704,7 @@ string select_filepath(string srcPath, string file_string, char filename[256])
 		fprintf(stderr, "exit !\n");
 		dstPath = ""; //NULL
 	}
-	CDBG("isGoback = %d cmd = %d length_of_file = %d\n", isGoback, cmd, strlen(file_list[cmd].c_str()));
+	DBG("isGoback = %d cmd = %d length_of_file = %d\n", isGoback, cmd, strlen(file_list[cmd].c_str()));
 
 	if (isGoback == 0) // not go back
 	{
@@ -847,28 +721,28 @@ string select_filepath(string srcPath, string file_string, char filename[256])
 		printf("srcPath = %s dstPath = %s file_string = %s isGoback = %d \n", srcPath.c_str(), dstPath.c_str(), file_string.c_str(), isGoback);
 	}
 
-	CDBG("selected [%s] \n", file_list[cmd].c_str());
+	DBG("selected [%s] \n", file_list[cmd].c_str());
 
 	if (isGoback == 3)
 	{
 		int pos = dstPath.find_last_of("\\", dstPath.length());
 		int len = dstPath.length();
-		CDBG("pos = %d dstPath=%s dstPath.length = %d\n", pos, dstPath.c_str(), len);
+		DBG("pos = %d dstPath=%s dstPath.length = %d\n", pos, dstPath.c_str(), len);
 		string subString;
 		for (int i = len - 1; i >= 0; i--)
 		{
-			CDBG("subString[%d] = %c \n", i, subString);
+			DBG("subString[%d] = %c \n", i, subString);
 			if (subString[i] == '\\')
 			{
 				dstPath.erase(i, dstPath.length());
-				CDBG("dstPath = %s \n", dstPath.c_str());
+				DBG("dstPath = %s \n", dstPath.c_str());
 				break;
 			}
 		}
 	}
 	else if (isGoback == 1)
 	{
-		CDBG("This is root path, can not go back \n");
+		DBG("This is root path, can not go back \n");
 	}
 
 #endif
@@ -890,7 +764,7 @@ void format_function(string filePath, int cmd)
 		getFiles(filePath, "", files, false);
 		printf("Opening File Path : %s\n", filePath.c_str());
 		bool isfile = is_file(filePath);
-		CDBG("let's start .... is file=%d cmd= %d \n", isfile, cmd);
+		DBG("let's start .... is file=%d cmd= %d \n", isfile, cmd);
 		size = files.size();
 		cout << "There are " << size << " files under \"" << filePath << "\":" << endl << endl;
 	}
@@ -914,7 +788,7 @@ void format_function(string filePath, int cmd)
 	for (int i = 0; i < size; i++)
 	{
 		string filename = filePath + files[i].c_str();
-		CDBG("The %d filename = %s \n", i, filename.c_str());
+		DBG("The %d filename = %s \n", i, filename.c_str());
 
 		//change from txt to xml for sensor
 		if (cmd == 1)
@@ -922,7 +796,7 @@ void format_function(string filePath, int cmd)
 				&& (files[i].find("txt", 0)) != string::npos && files[i].find("output", 0) == string::npos)
 			{
 				user_data.nRadio_select_mode = SENSOR_INIT;
-				Format::txt2xml_sensor(filename, user_data);
+				Format::txt2xml_for_modules(filename, user_data);
 			}
 		//change from xml to txt for sensor
 		if (cmd == 2)
@@ -930,7 +804,7 @@ void format_function(string filePath, int cmd)
 				&& (files[i].find("xml", 0)) != string::npos && files[i].find("output", 0) != string::npos)
 			{
 				user_data.nRadio_select_mode = SENSOR_INIT;
-				Format::xml2txt_sensor(filename, user_data);
+				Format::xml2txt_for_modules(filename, user_data);
 			}
 		//change from txt to xml for sensor
 		if (cmd == 3)
@@ -938,7 +812,7 @@ void format_function(string filePath, int cmd)
 				&& files[i].find("output", 0) == string::npos)
 			{
 				user_data.nRadio_select_mode = EEPROM;
-				Format::txt2xml_eeprom(filename, user_data);
+				Format::txt2xml_for_modules(filename, user_data);
 			}
 		//change from xml to txt for sensor
 		if (cmd == 4)
@@ -946,10 +820,10 @@ void format_function(string filePath, int cmd)
 				&& files[i].find("output", 0) != string::npos)
 			{
 				user_data.nRadio_select_mode = EEPROM;
-				Format::xml2txt_eeprom(filename, user_data);
+				Format::xml2txt_for_modules(filename, user_data);
 			}
 	}
-	CDBG("done \n");
+	DBG("done \n");
 #ifdef debug
 	fclose(stdout);
 	if (fd)
@@ -961,7 +835,7 @@ void format_function(string filePath, int cmd)
 		printf("fdopen open\n");
 		return;
 	}
-	CDBG("done\n");
+	DBG("done\n");
 #endif
 }
 
@@ -1001,7 +875,7 @@ void test_main()
 RETRY:
 	int cmd = -1;
 	filePath_out = select_filepath(rootPath, fileName);
-	CDBG("rootPath = %s fileName=%s filePath_out=%s \n", rootPath.c_str(), fileName.c_str(), filePath_out.c_str());
+	DBG("rootPath = %s fileName=%s filePath_out=%s \n", rootPath.c_str(), fileName.c_str(), filePath_out.c_str());
 	if (0 == strncmp("NULL", filePath_out.c_str(), 4))
 	{
 		goto RETRY;
@@ -1018,7 +892,7 @@ RETRY:
 			}
 		}
 #endif 
-		CDBG("You will process %s : %s \n", is_file(filePath_out) == true ? "file" : "folder", filePath_out.c_str());
+		DBG("You will process %s : %s \n", is_file(filePath_out) == true ? "file" : "folder", filePath_out.c_str());
 	}
 	while ((cmd >= 7 || cmd < 0) && retry < 3)
 	{

@@ -12,11 +12,11 @@ enum FORMAT_TYPE {
 	ACTUATOR,
 };
 
-typedef struct USER_DATA_T{
+typedef struct USER_DATA_T {
 	int nRadio_select_mode;
 	int nRadio_addr_type;
 	int nRadio_data_type;
-	int nUserFormatStringLine;	
+	int nUserFormatStringLine;
 }USER_DATA;
 
 class Format
@@ -26,10 +26,8 @@ public:
 	~Format();
 
 public:
-	static void txt2xml_sensor(string filename, USER_DATA user_data);
-	static void xml2txt_sensor(string filename, USER_DATA user_data);
-	static void txt2xml_eeprom(string filename, USER_DATA user_data);
-	static void xml2txt_eeprom(string filename, USER_DATA user_data);
+	static void txt2xml_for_modules(string filename, USER_DATA user_data);
+	static void xml2txt_for_modules(string filename, USER_DATA user_data);
 };
 
 unsigned int find_pos_substr(string src_str, string sub_str);

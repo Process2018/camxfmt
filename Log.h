@@ -6,17 +6,17 @@
 class Log
 {
 public:
-	Log::Log():context() 
-	{ 
-		CDBG("construct with none param"); 
+	Log::Log() :context()
+	{
+		CDBG("construct with none param");
 	}
 
 	inline Log::Log(const char *fileName, const char *functionName, int lineNumber)
-		:context(fileName, functionName, lineNumber) 
+		: context(fileName, functionName, lineNumber)
 	{
 		CDBG("construct with param");
 	}
-	
+
 	//这里必须返回 Debug 类型对象，这样重载操作符才能被调用: object->member
 	Debug error() const;
 	Debug info() const;
@@ -36,6 +36,3 @@ private:
 #define LOGV Log(__FILE__, __FUNCTION__, __LINE__).verbose
 
 #pragma once
-
-
-

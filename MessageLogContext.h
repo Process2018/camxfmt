@@ -24,6 +24,7 @@ WindowsºÍMFCµÄincludeÎÄ¼ş¶¼·Ç³£´ó£¬¼´Ê¹ÓĞÒ»¸ö¿ìËÙµÄ´¦Àí³ÌĞò£¬±àÒë³ÌĞòÒ²Òª»¨·ÑÏàµ
 #include "stdafx.h" 
 #include <string>
 #include <stdio.h>
+
 //#define NOTDEBUG
 #define USE_VS2017
 
@@ -37,13 +38,13 @@ enum LogType
 };
 
 #ifdef GCC
-//#define CDBG(fmt, args...) fprintf (stderr, fmt, args) ÔÚdebug¿É±ä²ÎÊıÎª0µÄÊ±ºò£¬CDBG("hello\n")£¬±àÒë»á³ö´í£¬²ÉÓÃÕâÑùµÄ·½Ê½£º
-#define CDBG(fmt, arg...)  printf("%s,%s(),%d:" fmt "\n", __FILE__,__FUNCTION__,__LINE__, ##arg) //## ÊÇÕ³Á¬·û,linux ²ÅÖ§³ÖÕâÖÖÄ£Ê½ 
-#define CDBG(fmt, args...) fprintf (stderr, fmt, args)
-#define CDBG(arg...) {\  
-	printf("[debug]:%s:%s:%d ---->", __FILE__, __FUNCTION__, __LINE__); \
-	printf(arg); \
-	fflush(stdout); \
+//#define DBG(fmt, args...) fprintf (stderr, fmt, args) ÔÚdebug¿É±ä²ÎÊıÎª0µÄÊ±ºò£¬CDBG("hello\n")£¬±àÒë»á³ö´í£¬²ÉÓÃÕâÑùµÄ·½Ê½£º
+#define DBG(fmt, arg...)  printf("%s,%s(),%d:" fmt "\n", __FILE__,__FUNCTION__,__LINE__, ##arg) //## ÊÇÕ³Á¬·û,linux ²ÅÖ§³ÖÕâÖÖÄ£Ê½ 
+#define DBG(fmt, args...) fprintf (stderr, fmt, args)
+#define DBG(arg...) {\  
+printf("[debug]:%s:%s:%d ---->", __FILE__, __FUNCTION__, __LINE__); \
+printf(arg); \
+fflush(stdout); \
 }
 #elif defined (USE_VS2017)
 #define printf_err(s)   printf("\[%s:%d    func:%s]%s\n", __FILE__, __LINE__, __FUNCTION__, s);
@@ -65,37 +66,39 @@ enum LogType
                 printf_err(s); \
                 break; \
         }
+
+// Below somtime make process crash , careful (cameraDlg.cpp / format.cpp)
+#define MYDEBUG
+#ifdef MYDEBUG
+#define SDBG(arg) {\
+				printf("[debug]:%s:%s:%d ---->",__FILE__,__FUNCTION__,__LINE__);\
+				printf(arg);\
+				fflush(stdout);\
+				printf("\n");\
+			}
+#else
+#define SDBG(arg...) {}
+#endif
+
 /*
 ************************************************
 Èç¹û¶¨Òåºê£º #define myprint printf
-µ±ºóÆÚ²»ÏëÔÙÒªºêÊä³öÁË£¬Ö»ÄÜ¶¨ÒåÎª¿Õ:  #define myprint 
+µ±ºóÆÚ²»ÏëÔÙÒªºêÊä³öÁË£¬Ö»ÄÜ¶¨ÒåÎª¿Õ:  #define myprint
 µ«ÊÇÔÚÄÇĞ©ÓĞºêµ÷ÓÃµÄ´úÂëÇø»áÁôÏÂÀàËÆÓï¾ä£º("%d",idx); ËüÓ¦¸Ã»á±»³ÌĞòÔËËãÒ»´Î£¬
 Ïñº¯Êı²ÎÊıÄÇÑù±»Ñ¹Õ»£¬³öÕ»Ò»´Î£¬´Ó¶øÔö¼ÓÁË³ÌĞòµÄÔËĞĞ¿ªÏú£¬²»ÊÇÒ»¸öÉÏ²ß¡£
 ************************************************
 */
 #ifdef NOTDEBUG
-#define CDBG(fmt, ...) { do {} while (0); }
+#define DBG(fmt, ...) { do {} while (0); }
 #else
-#define CDBG(fmt, ...)  printf("printf : %s() %d : " fmt "\n",__FUNCTION__,__LINE__,__VA_ARGS__)
+#define DBG(fmt, ...)  printf("printf : %s() %d : " fmt "\n",__FUNCTION__,__LINE__,__VA_ARGS__)
 
 //Showing log in consol for windows MFC
-//1£ºcprintf()²¢²»½«\n½âÊÍ³É\r\n£¨¼´»Ø³µ»»ĞĞ£©£¬ËüÖ»ÊÇ»»ĞĞ£¬Ã»ÓĞ»Ø³µ
-//2£ºcprintf()Ö±½ÓÏòµ±Ç°ÎÄ±¾´°¿ÚÊä³ö
-#define DBG(fmt, ...)  _cprintf("_cprintf : %s() %d : " fmt "\n",__FUNCTION__,__LINE__,__VA_ARGS__)
+//1£ºcprintf() ²¢²»½«\n½âÊÍ³É\r\n£¨¼´»Ø³µ»»ĞĞ£©£¬ËüÖ»ÊÇ»»ĞĞ£¬Ã»ÓĞ»Ø³µ
+//2£ºcprintf() Ö±½ÓÏòµ±Ç°ÎÄ±¾´°¿ÚÊä³ö
+#define CDBG(fmt, ...)  _cprintf("_cprintf : %s() %d : " fmt "\n",__FUNCTION__,__LINE__,__VA_ARGS__)
 #endif
 
-//// Below somtime make process crash , careful (cameraDlg.cpp / format.cpp)
-#define MYDEBUG
-#ifdef MYDEBUG
-#define DEBG(arg) {\
-		printf("[debug]:%s:%s:%d ---->",__FILE__,__FUNCTION__,__LINE__);\
-		printf(arg);\
-		fflush(stdout);\
-		printf("\n");\
-	}
-#else
-#define DEBG(arg...) {}
-#endif
 #endif
 
 /*
@@ -114,28 +117,28 @@ C++ÒªÇó¶ÔÒ»°ãµÄÄÚÖÃº¯ÊıÒªÓÃ¹Ø¼ü×ÖinlineÉùÃ÷£¬µ«¶ÔÀàÄÚ¶¨ÒåµÄ³ÉÔ±º¯Êı£¬¿ÉÒÔÊ¡ÂÔinl
 class MessageLogContext
 {
 public:
-	MessageLogContext() : line(0), file(0), function(0) 
+	MessageLogContext() : line(0), file(0), function(0)
 	{
-		CDBG("construct without param");
+		DBG("construct without param");
 	}
-	
+
 	//@ÀàÄÚ¶¨ÒåµÄº¯ÊıÒÑ¾­Ä¬ÈÏÊÇ inline . ÔÚ(ÀàÄÚ & º¯ÊıÌåÍâ)Ö»ÄÜ¶¨ÒåÈ«¾Ö±äÁ¿ºÍ¶ÔÏó£¬²»ÄÜÖ´ĞĞÓï¾ä»òµ÷ÓÃº¯Êı
 	MessageLogContext::MessageLogContext(const char *fileName, const char *functionName, int lineNumber)
 		: file(fileName), function(functionName), line(lineNumber) {
-		CDBG("construct with param");
+		DBG("construct with param");
 	}
 	int line;
 	const char *file;
 	const char *function;
 	void copy(const MessageLogContext &logContext)
 	{
-		CDBG("function=%s line=%d",logContext.function,logContext.line);
+		DBG("function=%s line=%d", logContext.function, logContext.line);
 		this->file = logContext.file;
 		this->line = logContext.line;
 		this->function = logContext.function;
 	}
 
-// To be a public class for Log.h & Debug.h access
+	// To be a public class for Log.h & Debug.h access
 private:
 	friend class MessageLogger;
 	friend class Debug;

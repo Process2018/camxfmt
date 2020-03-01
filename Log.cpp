@@ -40,8 +40,8 @@ Debug Log::debug() const
 	ctxt.copy(context); // 用 context 的 stream->context 的 (file,line,function) 去初始化局部变量 ctxt 
 	dbg.stream->logType = LOG_DEBUG;
 	printf("%s %d X dbg.count = %d\n", __FUNCTION__, __LINE__, Debug::count); // 因为是类Debug的友元类，所以这里可以访问Debug 的私有成员变量
-	if(dbg.count == 1) //如果不设置友元类(可以是私有友元)，则通过对象也不能访问（因为是私有变量，否则要通过间接调用Debug的公有接口访问）,友元类使用较少
-	  dbg.LogToConsole(dbg.stream->logType, dbg.stream->context, dbg.stream->ss.str());
+	if (dbg.count == 1) //如果不设置友元类(可以是私有友元)，则通过对象也不能访问（因为是私有变量，否则要通过间接调用Debug的公有接口访问）,友元类使用较少
+		dbg.LogToConsole(dbg.stream->logType, dbg.stream->context, dbg.stream->ss.str());
 	return dbg;       // 返回类的对象会调用拷贝构造函数，所以需要自己定义一个拷贝构造函数
 }
 

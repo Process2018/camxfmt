@@ -7,7 +7,7 @@ int Debug::count = 0;  // 在类外(类的实现文件)初始化类的静态成员变量 - 计数器
 
 Debug::Debug(std::string *s) : stream(new Stream(s)) {
 	count++;
-	CDBG(" construct count=%d", count);
+	DBG(" construct count=%d", count);
 	cout << "s = " << *s << endl;
 }
 
@@ -18,17 +18,17 @@ Debug::Debug(const Debug &object) {
 	stream->logType = object.stream->logType;
 	stream->space = object.stream->space;
 	//stream->ss = object.stream->ss;
-	CDBG("This is copy construct count=%d", count);
+	DBG("This is copy construct count=%d", count);
 }
 
 Debug::~Debug()
 {
 	count--;
-	CDBG(" distruct and call LogToConsole count=%d", count);
+	DBG(" distruct and call LogToConsole count=%d", count);
 	/*
 	************************************************
 	//现在将 LogToConsole调用 放到 Debug 类的成员函数 MessageLogger::debug()中
-	if(count == 0) 
+	if(count == 0)
 		LogToConsole(stream->logType, stream->context, stream->ss.str());
 	************************************************
 	*/
@@ -51,7 +51,7 @@ Debug::~Debug()
 void Debug::LogToConsole(LogType type, const MessageLogContext &context, std::string logBuffer)
 {
 	std::string logString;
-	CDBG(" E ");
+	DBG(" E ");
 	switch (type)
 	{
 	case LOG_DEBUG:
@@ -77,12 +77,12 @@ void Debug::LogToConsole(LogType type, const MessageLogContext &context, std::st
 	logString.append("()");
 	logString.append(to_string(context.line));
 	std::cout << logString << std::endl;
-	CDBG(" X ");
+	DBG(" X ");
 	test_friend_method(this);
 }
 
 void test_friend_method(Debug *dbg) { //Debug const dbg
-	CDBG("qfh Debug::count=%d", Debug::count);// private 或者 public 限定的 friend 函数都可以访问
-	CDBG("qfh Debug::count=%d", dbg->count);//private friend 可以访问
-	//CDBG("qfh Debug::count=%d", count); //无法确定哪个实例
+	DBG("qfh Debug::count=%d", Debug::count);// private 或者 public 限定的 friend 函数都可以访问
+	DBG("qfh Debug::count=%d", dbg->count);//private friend 可以访问
+	//DBG("qfh Debug::count=%d", count); //无法确定哪个实例
 }

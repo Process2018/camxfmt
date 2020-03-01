@@ -36,11 +36,11 @@ public:
 
 		Stream() : ss(), space(true), context() {}
 		Stream(std::string *s) : ss(*s), space(true), context() {
-			CDBG("construct by new Stream and *s = %s",s->c_str());
+			DBG("construct by new Stream and *s = %s", s->c_str());
 		}
 	} *stream;
 
-	inline Debug() : stream(new Stream()) { count++;}
+	inline Debug() : stream(new Stream()) { count++; }
 	Debug(std::string *s);
 	Debug::Debug(const Debug &object);
 	~Debug();
@@ -76,9 +76,9 @@ private:
 	//static Debug* _instance;  //没看到有什么用
 	static int count;           // 一般用静态成员做为计数器
 	friend class Log; //常写为私有(把类看成一个变量),当希望一个类可以存取另一个类的私有成员时，可以将该类声明为另一类的友元类,
-	                  //这样在 MessageLogger 类中可以访问 Debug 的私有成员count (友元类可以访问与之为友元关系的类的所有成员，包括私有)
+					  //这样在 MessageLogger 类中可以访问 Debug 的私有成员count (友元类可以访问与之为友元关系的类的所有成员，包括私有)
 	//friend Debug MessageLogger::debug()const; //友元函数，在 debug 函数中不能通过（类或者类的对象）访问类的静态成员变量 count , 为啥
-    friend void test_friend_method(Debug *dbg);
+	friend void test_friend_method(Debug *dbg);
 
 };
 
