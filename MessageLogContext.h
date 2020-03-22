@@ -47,9 +47,9 @@ printf(arg); \
 fflush(stdout); \
 }
 #elif defined (USE_VS2017)
-#define printf_err(s)   printf("\[%s:%d    func:%s]%s\n", __FILE__, __LINE__, __FUNCTION__, s);
-#define printf_info(s)  printf("\[%s:%d    func:%s]%s\n", __FILE__, __LINE__, __FUNCTION__, s);
-#define printf_warn(s)  printf("\[%s:%d    func:%s]%s\n", __FILE__, __LINE__, __FUNCTION__, s);
+#define printf_err(s)   printf("\n[%s:%d    func:%s]%s\n", __FILE__, __LINE__, __FUNCTION__, s);
+#define printf_info(s)  printf("\n[%s:%d    func:%s]%s\n", __FILE__, __LINE__, __FUNCTION__, s);
+#define printf_warn(s)  printf("\n[%s:%d    func:%s]%s\n", __FILE__, __LINE__, __FUNCTION__, s);
 
 #define printf_log(t,s) \
         switch (t) \

@@ -22,64 +22,64 @@ string defaultCueForser[5] = {
 
 string default_eeprom_memory_format_string[21] =
 {
-	{ "  <!--Sequence of register setting to configure the device -->" },
-	{ "  <memoryMap>" },
-	{ "	  <!--Contains: register address, register data, register address type, register data type," },
-	{ "	  operation and delay in micro seconds" },
-	{ "	  element for slaveAddr" },
-	{ "	  element for registerAddr" },
-	{ "	  element for registerData" },
-	{ "	  element for regAddrType" },
-	{ "	  element for regDataType" },
-	{ "	  element for operation" },
-	{ "	  element for delayUs -->" },
-		{"	  <regSetting>"},
-		{"		<slaveAddr>0xA2</slaveAddr>"},
-		{"		<registerAddr>0x00</registerAddr>"},
-		{"		<registerData>0x00</registerData>"},
-		{"		<regAddrType rang=\"[1,4]\">2</regAddrType>"},
-		{"		<regDataType rang=\"[1,4]\">2</regDataType>"},
-		{"		<operation>READ</operation>"},
-		{"		<delayUs>0</delayUs>"},
-		{"	  </regSetting>"},
-	{ "  </memoryMap>" },
+	{"  <!--Sequence of register setting to configure the device -->" },
+	{"  <memoryMap>" },
+	{"	   <!--Contains: register address, register data, register address type, register data type," },
+	{"        operation and delay in micro seconds" },
+	{"        element for slaveAddr" },
+	{"        element for registerAddr" },
+	{"        element for registerData" },
+	{"        element for regAddrType" },
+	{"        element for regDataType" },
+	{"        element for operation" },
+	{"        element for delayUs -->" },
+	{"	   <regSetting>"},
+	{"	     <slaveAddr>0x00</slaveAddr>"},
+	{"	     <registerAddr>0x00</registerAddr>"},
+	{"	     <registerData>0x00</registerData>"},
+	{"	     <regAddrType rang=\"[1,4]\">2</regAddrType>"},
+	{"	     <regDataType rang=\"[1,4]\">2</regDataType>"},
+	{"	     <operation>READ</operation>"},
+	{"	     <delayUs>0</delayUs>"},
+	{"	     </regSetting>"},
+	{"  </memoryMap>" },
 };
 
 string default_sensor_init_format_string[15] =
 {
-	{ "  <!--Sequence of register setting to configure the device -->" },
-	{ "  <initSettings>" },
-	{ "  	<!--Specify which sensor version can support this setting-->" },
-	{ "  	<sensorVersion>0</sensorVersion>" },
-	{ "  	<initSetting>" },
-	{"	  <regSetting>"},
-	{"		<registerAddr>0x0000</registerAddr>"},
-	{"		<registerData>0x00</registerData>"},
-	{"		<regAddrType rang=\"[1,4]\">2</regAddrType>"},
-	{"		<regDataType rang=\"[1,4]\">2</regDataType>"},
-	{"		<operation>WRITE</operation>"},
-	{"		<delayUs>0</delayUs>"},
-	{"	  </regSetting>"},
-	{ "  	</initSetting>" },
-	{ "  </initSettings>" },
+	{"  <!--Sequence of register setting to configure the device -->" },
+	{"  <initSettings>" },
+	{"    <!--Specify which sensor version can support this setting-->" },
+	{"      <sensorVersion>0</sensorVersion>" },
+	{"      <initSetting>" },
+	{"          <regSetting>"},
+	{"          <registerAddr>0x0000</registerAddr>"},
+	{"          <registerData>0x00</registerData>"},
+	{"          <regAddrType rang=\"[1,4]\">2</regAddrType>"},
+	{"          <regDataType rang=\"[1,4]\">2</regDataType>"},
+	{"          <operation>WRITE</operation>"},
+	{"          <delayUs>0</delayUs>"},
+	{"        </regSetting>"},
+	{"      </initSetting>" },
+	{"  </initSettings>" },
 };
 
 string default_sensor_res_format_string[15] =
 {
-	{ "  <!--Sequence of register setting to configure the device -->" },
-	{ "  <resSettings>" },
-	{ "  	<!--Register setting configuration" },
-	{ "  		Contains: register address, register data, register address type, register data type" },
-	{ "  		operation and delay in micro seconds -->" },
-		{"	  <regSetting>"},
-		{"		<registerAddr>0x0000</registerAddr>"},
-		{"		<registerData>0x00</registerData>"},
-		{"		<regAddrType rang=\"[1,4]\">2</regAddrType>"},
-		{"		<regDataType rang=\"[1,4]\">2</regDataType>"},
-		{"		<operation>WRITE</operation>"},
-		{"		<delayUs>0</delayUs>"},
-		{"	  </regSetting>"},
-	{ "  </resSettings>" },
+	{"  <!--Sequence of register setting to configure the device -->" },
+	{"  <resSettings>" },
+	{"    <!--Register setting configuration" },
+	{"        Contains: register address, register data, register address type, register data type" },
+	{"        operation and delay in micro seconds -->" },
+	{"    <regSetting>"},
+	{"      <registerAddr>0x0000</registerAddr>"},
+	{"      <registerData>0x00</registerData>"},
+	{"      <regAddrType rang=\"[1,4]\">2</regAddrType>"},
+	{"      <regDataType rang=\"[1,4]\">2</regDataType>"},
+	{"      <operation>WRITE</operation>"},
+	{"      <delayUs>0</delayUs>"},
+	{"    </regSetting>"},
+	{"  </resSettings>" },
 };
 
 Format::Format()
@@ -136,8 +136,10 @@ string replace_with_substr(string strline, string substr)
 
 //how to skip string except addr like 0xAAAA ?
 void Format::txt2xml_for_modules(string filename, USER_DATA user_data) {
-	printf_err(filename);
-	//SDBG("start processing for %s",filename.c_str());//good
+	printf_err(filename.c_str());
+
+	//do a test for file operation
+	test_file_read_write();
 
 	int pos_of_dog = find_pos_substr(filename, ".");
 	string str_sub1 = filename.substr(0, pos_of_dog);
@@ -145,6 +147,15 @@ void Format::txt2xml_for_modules(string filename, USER_DATA user_data) {
 	DBG("str_sub1 = %s str_sub2 = %s \n", str_sub1.c_str(), str_sub2.c_str());
 	string writefilename = str_sub1 + "_output" + ".xml";
 	DBG("writefilename = %s \n", writefilename.c_str());
+
+	//process excel file
+	if (filename.find(".csv") != string::npos
+		|| filename.find(".xls") != string::npos
+		|| filename.find(".xlsx") != string::npos)
+	{
+		DBG("process csv file");
+		read_from_excel_file(filename.c_str());
+	}
 
 	//clear file
 	ofstream out;
@@ -434,13 +445,10 @@ void Format::txt2xml_for_modules(string filename, USER_DATA user_data) {
 	out.close();
 	cout << "cout:txt2xml process " << line_cnt << " line for sensor done " << filename.c_str() << endl;
 	fprintf(stderr, "fprintf: txt2xml process %d line for sensor done %s\n", line_cnt, filename.c_str());
-	//SDBG("process for %s done",filename.c_str());//good	
 }
 
 void Format::xml2txt_for_modules(string filename, USER_DATA user_data) {
-	printf_err(filename);
-	//SDBG(filename.c_str());//good
-	//SDBG("start processing for %s",filename.c_str());//good
+	printf_err(filename.c_str());
 
 	int pos_of_dog = find_pos_substr(filename, ".");
 	string str_sub1 = filename.substr(0, pos_of_dog);
@@ -519,7 +527,245 @@ void Format::xml2txt_for_modules(string filename, USER_DATA user_data) {
 	in.close();
 	out.flush();
 	out.close();
-	//SDBG("process for %s done",filename.c_str());//good	
+}
+
+void read_from_excel_file(const char *readFileName)
+{
+
+	FILE *fp = NULL;
+	int i, j;
+	float da[6][5] = { 0 };
+	int ret = fopen_s(&fp, readFileName, "rb");
+	if (ret != 0)
+	{
+		DBG("open file %s fail %d\n", readFileName, ret);
+		return;
+	}
+	else
+		DBG("open file %s success %d\n", readFileName, ret);
+
+	fseek(fp, 0, SEEK_SET);  // fp指针指向文件头部
+
+	for (i = 0; i < 6; i++)
+		for (j = 0; j < 5; j++)
+		{
+			fscanf_s(fp, "%f", &da[i][j]);
+			fseek(fp, 5L, SEEK_CUR);   /*fp指针从当前位置向后移动*/
+		}
+
+	for (i = 0; i < 6; i++)
+		printf("%f\t%f\t%f\t%f\t%f\t\n", da[i][0],
+			da[i][1], da[i][2], da[i][3], da[i][4]);
+	fclose(fp);
+
+	char *file_content = NULL;
+	int fileSize_r = read_from_file(readFileName, "rb", &file_content);
+
+	char writeFileName[256] = "E:\\C++\\camera\\Debug\\test.csv";
+	write_data_to_file(writeFileName, "wb", &file_content, fileSize_r);
+}
+
+void write_to_excel_file(const char *fileName)
+{
+	char chy[4] = { 'x' ,'a' ,'h','w' };
+	int data[4] = { 1 , 3 , 6 ,9 };
+	int i;
+	FILE *fp = NULL;
+	int ret = fopen_s(&fp, fileName, "w");
+	if (ret != 0)
+	{
+		DBG("open file %s fail %d\n", fileName, ret);
+		return;
+	}
+	else
+		DBG("open file %s success %d\n", fileName, ret);
+
+	for (i = 0; i < 4; i++)
+	{
+		fprintf(fp, "%c\t%d\n", chy[i], data[i]);
+	}
+
+	fclose(fp);
+}
+
+#include <direct.h>
+void getTimeAndFileName(const char * nodeName, char *sufix, char **fileName)
+{
+	time_t timep;
+	time(&timep);
+	char curTime[256];
+	strftime(curTime, sizeof(curTime), "%Y%m%d_%H%M%S", localtime(&timep));
+
+	char cur_dir[64];
+	_getcwd(cur_dir, sizeof(cur_dir));
+	//snprintf(cur_dir, strlen("E:\\C++\\YUV\\"), "E:\\C++\\YUV\\");
+
+	*fileName = (char *)malloc(256 * sizeof(char));
+	if (*fileName == NULL)
+	{
+		DBG("malloc fail for fileName, return");
+		return;
+	}
+	sprintf(*fileName, "%s\\%s_%s.%s", cur_dir, curTime, nodeName, sufix);
+	DBG("fileName = %s cur_dir = %s", *fileName, cur_dir);
+
+	time_t times = time(NULL);
+	struct tm* utcTime = gmtime(&times);
+	char timeStr[64];
+	int timeStrLen = sprintf(timeStr, "%04d%02d%02dT%02d%02d%02dZ",
+		utcTime->tm_year + 1900, utcTime->tm_mon + 1, utcTime->tm_mday, utcTime->tm_hour, utcTime->tm_min, utcTime->tm_sec);
+	time_t tt = time(NULL);
+	tm* t = localtime(&tt);
+	DBG("Current Time : %d-%02d-%02d %02d:%02d:%02d\n",
+		t->tm_year + 1900,
+		t->tm_mon + 1,
+		t->tm_mday,
+		t->tm_hour,
+		t->tm_min,
+		t->tm_sec);
+
+	return;
+}
+
+int read_from_file(const char *cFileName, const char * mode, char** Content)
+{
+	DBG("reading file from %s with mode %s ..", cFileName, mode);
+	FILE* pFile = fopen(cFileName, mode);
+	int fileSize = 0;
+	if (pFile == NULL)
+	{
+		fprintf(stderr, "error: not found: %s\n", cFileName);
+		return 0;
+	}
+	else if (pFile != NULL)
+	{
+		fseek(pFile, 0L, SEEK_END);
+		fileSize = ftell(pFile);
+		DBG("fileSize = %d", fileSize);
+
+		fseek(pFile, 0L, SEEK_SET);
+		char* pData = (char*)malloc(fileSize);
+		memset(pData, 0, fileSize);
+		int real_read_bytes = 0;
+		int block_size = 1024;
+		if (fileSize > block_size)
+		{
+			int read_byte = 0;
+			while (!feof(pFile) || real_read_bytes < fileSize)
+			{
+				read_byte = fread(pData + real_read_bytes, 1, block_size, pFile);
+				real_read_bytes += read_byte;
+				//DBG("pData=%p real_read_bytes=%d read_byte=%d", pData, real_read_bytes, read_byte);
+				if (read_byte < block_size) // 每次读 block_size 字节，而且返回的是字节数，同时也是块数，当返回的块数小于最大块数时，表明读到最后一块
+				{
+					int err = ferror(pFile);
+					int is_feof = feof(pFile);
+					DBG("err = %d is_feof = %d", err, is_feof);
+					break; //用文本文件方式读取二进制文件会有 bug，没有读到文件末尾但读出来的 size < block_size , err = 0 , feof = 16
+				}
+			}
+		}
+		else
+		{
+			real_read_bytes = fread(pData, 1, fileSize, pFile);
+		}
+		*Content = (char*)malloc(fileSize);
+		memcpy(*Content, pData, fileSize);
+		DBG("real_read_bytes=%d fileSize=%d", real_read_bytes, fileSize);
+
+		fclose(pFile);
+		free(pData);
+	}
+	DBG("reading file from %s .. done", cFileName);
+	return fileSize;
+}
+
+void write_data_to_file(const char *cFileName, const char * mode, char** Content, int size)
+{
+	DBG("saving file to %s with mode %s size=%d ..", cFileName, mode, size);
+	if (size == 0)
+		return;
+	FILE* file = fopen(cFileName, mode);
+	int real_write_bytes = 0;
+	if (strncmp("wb", mode, 2) == 0)
+	{
+		int block_size = 1024;
+		if (size > block_size)
+		{
+			int write_byte = 0;
+			int left_bytes = size;
+			while (left_bytes > 0)
+			{
+				if (left_bytes > block_size)
+				{
+					write_byte = fwrite(*Content + real_write_bytes, 1, block_size, file);
+				}
+				else
+				{
+					write_byte = fwrite(*Content + real_write_bytes, 1, left_bytes, file);
+				}
+				left_bytes -= write_byte;
+				real_write_bytes += write_byte;
+				//DBG("left_bytes=%d real_write_bytes=%d write_byte=%d size=%d", left_bytes, real_write_bytes, write_byte, size);
+			}
+		}
+		else
+		{
+			real_write_bytes = fwrite(*Content, 1, size, file);
+		}
+	}
+	else
+	{
+		for (int i = 0; i < 64 * (size % 64); i += 64)
+		{
+			char *p = *Content;
+			int k = 0;
+			fprintf(file, "line %04d ", i);
+			for (k = 0; k < 4; k++)
+			{
+				fprintf(file, "[0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x]",
+					*(p + 16 * k), *(p + 16 * k + 1), *(p + 16 * k + 2), *(p + 16 * k + 3), *(p + 16 * k + 4), *(p + 16 * k + 5), *(p + 16 * k + 6), *(p + 16 * k + 7), *(p + 16 * k + 8),
+					*(p + 16 * k + 9), *(p + 16 * k + 10), *(p + 16 * k + 11), *(p + 16 * k + 12), *(p + 16 * k + 13), *(p + 16 * k + 14), *(p + 16 * k + 15));
+
+				DBG("[0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x] [0x%02x]",
+					*(p + 16 * k), *(p + 16 * k + 1), *(p + 16 * k + 2), *(p + 16 * k + 3), *(p + 16 * k + 4), *(p + 16 * k + 5), *(p + 16 * k + 6), *(p + 16 * k + 7), *(p + 16 * k + 8),
+					*(p + 16 * k + 9), *(p + 16 * k + 10), *(p + 16 * k + 11), *(p + 16 * k + 12), *(p + 16 * k + 13), *(p + 16 * k + 14), *(p + 16 * k + 15));
+			}
+			fprintf(file, "%c", '\n');
+			p += 64;
+		}
+	}
+	fflush(file);
+	fclose(file);
+	DBG("saving file to %s .. done", cFileName);
+}
+
+void test_file_read_write()
+{
+	//read from txt file and save to a txt file
+	const char src_filename[256] = "E:\\C++\\in.txt";
+	const char dstFile_txt[256] = "E:\\C++\\out.txt";
+	char *dataBuffer = NULL;
+
+	int fileSize = read_from_file(src_filename, "r", &dataBuffer);
+	write_data_to_file(dstFile_txt, "w", &dataBuffer, fileSize);
+
+	//read data from yuv file and save to txt file, YUV 是二进制文件，使用文本文件方式读取再写入txt 文件会出现问题,所以下面要用 rb 和 wb
+	const char src_filename_yuv[256] = "E:\\C++\\20200306_173656_node[IN]_w[4032]_h[3024].yuv";
+	//char dstFile_yuv_in[256] = "E:\\C++\\CPP\\yuvin.txt";
+	const char *nodeName = "IN";
+	char *dstFile_yuv_in = NULL;
+	getTimeAndFileName(nodeName, "txt", &dstFile_yuv_in);
+	char *yuv_addr_r = NULL;
+	int fileSize_r = read_from_file(src_filename_yuv, "rb", &yuv_addr_r);
+	write_data_to_file(dstFile_yuv_in, "wb", &yuv_addr_r, fileSize_r);
+
+	//read data from yuv file and save to txt file
+	const char dst_Filename_yuv[256] = "E:\\C++\\20200306_173656_node[OUT]_w[4032]_h[3024].yuv";
+	const char dstFile_yuv_out[256] = "E:\\C++\\yuvout.txt";
+	char *yuv_addr_w = NULL;
+	int fileSize_w = read_from_file(dst_Filename_yuv, "rb", &yuv_addr_w);
+	write_data_to_file(dstFile_yuv_out, "wb", &yuv_addr_w, fileSize_w);
 }
 
 void check_bit(int data, int data_mask)
@@ -560,8 +806,8 @@ bool is_file(string fileName)
 	else if (_S_IFREG & buf.st_mode)
 	{
 		DBG("This is a file name = %s \n", fileName.c_str());
-		return true;
 	}
+	return true;
 }
 
 void getFiles(string path, string path2, vector<string> & files, bool add_folder)
@@ -598,7 +844,7 @@ void getFiles(string path, string path2, vector<string> & files, bool add_folder
 
 bool isNum(string str)
 {
-	for (int i = 0; i < str.size(); i++)
+	for (unsigned int i = 0; i < str.size(); i++)
 	{
 		int tmp = (int)str[i];
 		if (tmp >= 48 && tmp <= 57)
@@ -620,7 +866,7 @@ bool is_a_command(string strline)
 		return false;
 	for (int i = 0; i < len; i++)
 	{
-		//NULL tab 鎹㈣ 鍥炶溅 绌烘牸 閫楀彿
+		//NULL, tab , 换行 , 回车, 空格 , 逗号
 		//if(strline[i] == 0 || strline[i] == 9 || strline[i] == 10 || strline[i] == 13|| strline[i] == 32 || strline[i] == 44)
 		if (strline[i] >= 'a' && strline[i] <= 'z' || strline[i] >= 'A' && strline[i] <= 'Z')
 		{
@@ -728,10 +974,10 @@ string select_filepath(string srcPath, string file_string, char filename[256])
 		int pos = dstPath.find_last_of("\\", dstPath.length());
 		int len = dstPath.length();
 		DBG("pos = %d dstPath=%s dstPath.length = %d\n", pos, dstPath.c_str(), len);
-		string subString;
+		string subString = dstPath;
 		for (int i = len - 1; i >= 0; i--)
 		{
-			DBG("subString[%d] = %c \n", i, subString);
+			DBG("subString[%d] = %c \n", i, subString[i]);
 			if (subString[i] == '\\')
 			{
 				dstPath.erase(i, dstPath.length());

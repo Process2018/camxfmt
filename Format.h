@@ -41,4 +41,11 @@ void getFiles(string path, string path2, vector<string> & files, bool add_folder
 bool isNum(string str);
 bool is_a_command(string strline);
 
+//process excel
+void read_from_excel_file(const char *fileName);
+void write_to_excel_file(const char *fileName);
+void getTimeAndFileName(const char * nodeName, char *sufix, char **fileName);
+int read_from_file(const char *cFileName, const char * mode, char** Content);
+void write_data_to_file(const char *cFileName, const char * mode, char** Content, int size);
+void test_file_read_write();
 #endif
