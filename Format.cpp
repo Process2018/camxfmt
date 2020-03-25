@@ -20,43 +20,44 @@ string defaultCueForser[5] = {
 	{"Below are default format for addr and data :\r\n\r\n"},
 };
 
-string default_eeprom_memory_format_string[21] =
+string default_eeprom_memory_format_string[64] =
 {
-	{"  <!--Sequence of register setting to configure the device -->" },
+	{"  <!--Sequence of register settings to configure the device -->" },
 	{"  <memoryMap>" },
-	{"	   <!--Contains: register address, register data, register address type, register data type," },
+	{"    <!--Register setting configuration"},
+	{"        Contains: register address, register data, register address type, register data type," },
 	{"        operation and delay in micro seconds" },
-	{"        element for slaveAddr" },
-	{"        element for registerAddr" },
-	{"        element for registerData" },
-	{"        element for regAddrType" },
-	{"        element for regDataType" },
-	{"        element for operation" },
-	{"        element for delayUs -->" },
-	{"	   <regSetting>"},
-	{"	     <slaveAddr>0x00</slaveAddr>"},
-	{"	     <registerAddr>0x00</registerAddr>"},
-	{"	     <registerData>0x00</registerData>"},
-	{"	     <regAddrType rang=\"[1,4]\">2</regAddrType>"},
-	{"	     <regDataType rang=\"[1,4]\">2</regDataType>"},
-	{"	     <operation>READ</operation>"},
-	{"	     <delayUs>0</delayUs>"},
-	{"	     </regSetting>"},
+	{"          element for slaveAddr" },
+	{"          element for registerAddr" },
+	{"          element for registerData" },
+	{"          element for regAddrType" },
+	{"          element for regDataType" },
+	{"          element for operation" },
+	{"          element for delayUs -->" },
+	{"    <regSetting>"},
+	{"      <slaveAddr>0x00</slaveAddr>"},
+	{"      <registerAddr>0x00</registerAddr>"},
+	{"      <registerData>0x00</registerData>"},
+	{"      <regAddrType range=\"[1,4]\">2</regAddrType>"},
+	{"      <regDataType range=\"[1,4]\">2</regDataType>"},
+	{"      <operation>READ</operation>"},
+	{"      <delayUs>0</delayUs>"},
+	{"    </regSetting>"},
 	{"  </memoryMap>" },
 };
 
-string default_sensor_init_format_string[15] =
+string default_sensor_init_format_string[64] =
 {
-	{"  <!--Sequence of register setting to configure the device -->" },
+	{"  <!--Sequence of register settings to configure the device -->" },
 	{"  <initSettings>" },
 	{"    <!--Specify which sensor version can support this setting-->" },
 	{"      <sensorVersion>0</sensorVersion>" },
 	{"      <initSetting>" },
-	{"          <regSetting>"},
+	{"        <regSetting>"},
 	{"          <registerAddr>0x0000</registerAddr>"},
 	{"          <registerData>0x00</registerData>"},
-	{"          <regAddrType rang=\"[1,4]\">2</regAddrType>"},
-	{"          <regDataType rang=\"[1,4]\">2</regDataType>"},
+	{"          <regAddrType range=\"[1,4]\">2</regAddrType>"},
+	{"          <regDataType range=\"[1,4]\">2</regDataType>"},
 	{"          <operation>WRITE</operation>"},
 	{"          <delayUs>0</delayUs>"},
 	{"        </regSetting>"},
@@ -64,28 +65,27 @@ string default_sensor_init_format_string[15] =
 	{"  </initSettings>" },
 };
 
-string default_sensor_res_format_string[15] =
+string default_sensor_res_format_string[64] =
 {
-	{"  <!--Sequence of register setting to configure the device -->" },
-	{"  <resSettings>" },
-	{"    <!--Register setting configuration" },
-	{"        Contains: register address, register data, register address type, register data type" },
-	{"        operation and delay in micro seconds -->" },
-	{"    <regSetting>"},
-	{"      <registerAddr>0x0000</registerAddr>"},
-	{"      <registerData>0x00</registerData>"},
-	{"      <regAddrType rang=\"[1,4]\">2</regAddrType>"},
-	{"      <regDataType rang=\"[1,4]\">2</regDataType>"},
-	{"      <operation>WRITE</operation>"},
-	{"      <delayUs>0</delayUs>"},
-	{"    </regSetting>"},
-	{"  </resSettings>" },
+	{"  <!--Sequence of register settings to configure the device -->" },
+	{"    <resSettings>" },
+	{"      <!--Register setting configuration" },
+	{"          Contains: register address, register data, register address type, register data type" },
+	{"          operation and delay in micro seconds -->" },
+	{"      <regSetting>"},
+	{"        <registerAddr>0x0000</registerAddr>"},
+	{"        <registerData>0x00</registerData>"},
+	{"        <regAddrType range=\"[1,4]\">2</regAddrType>"},
+	{"        <regDataType range=\"[1,4]\">2</regDataType>"},
+	{"        <operation>WRITE</operation>"},
+	{"        <delayUs>0</delayUs>"},
+	{"      </regSetting>"},
+	{"    </resSettings>" },
 };
 
 Format::Format()
 {
 }
-
 
 Format::~Format()
 {
@@ -139,7 +139,7 @@ void Format::txt2xml_for_modules(string filename, USER_DATA user_data) {
 	printf_err(filename.c_str());
 
 	//do a test for file operation
-	test_file_read_write();
+	//test_file_read_write();
 
 	int pos_of_dog = find_pos_substr(filename, ".");
 	string str_sub1 = filename.substr(0, pos_of_dog);
@@ -182,7 +182,7 @@ void Format::txt2xml_for_modules(string filename, USER_DATA user_data) {
 		nFomatStringLineCnt = 15;
 	}
 	else if (user_data.nRadio_select_mode == EEPROM) {
-		nFomatStringLineCnt = 21;
+		nFomatStringLineCnt = 22;
 	}
 
 	if (user_data.nUserFormatStringLine > 0)
@@ -591,14 +591,29 @@ void write_to_excel_file(const char *fileName)
 #include <direct.h>
 void getTimeAndFileName(const char * nodeName, char *sufix, char **fileName)
 {
+	char curTime[256];
+#if (!defined(NDEBUG) && !defined(_WIN64)) //if it is debug mode, open a console 
 	time_t timep;
 	time(&timep);
-	char curTime[256];
 	strftime(curTime, sizeof(curTime), "%Y%m%d_%H%M%S", localtime(&timep));
-
+#else
+	struct tm t; //tm 结构指针
+	time_t now; //声明time_t类型变量
+	time(&now); //获取系统日期和时间
+	localtime_s(&t, &now); //获取当地日期和时间
+	strftime(curTime, sizeof(curTime), "%Y%m%d_%H%M%S", &t); // size_t strftime( char *str, size_t maxsize, const char *fmt, struct tm *time );
+	printf("年：%d\n", t.tm_year + 1900);
+	printf("月：%d\n", t.tm_mon + 1);
+	printf("日：%d\n", t.tm_mday);
+	printf("周：%d\n", t.tm_wday);
+	printf("一年中：%d\n", t.tm_yday);
+	printf("时：%d\n", t.tm_hour);
+	printf("分：%d\n", t.tm_min);
+	printf("秒：%d\n", t.tm_sec);
+	printf("夏令时：%d\n", t.tm_isdst);
+#endif
 	char cur_dir[64];
 	_getcwd(cur_dir, sizeof(cur_dir));
-	//snprintf(cur_dir, strlen("E:\\C++\\YUV\\"), "E:\\C++\\YUV\\");
 
 	*fileName = (char *)malloc(256 * sizeof(char));
 	if (*fileName == NULL)
@@ -606,23 +621,24 @@ void getTimeAndFileName(const char * nodeName, char *sufix, char **fileName)
 		DBG("malloc fail for fileName, return");
 		return;
 	}
-	sprintf(*fileName, "%s\\%s_%s.%s", cur_dir, curTime, nodeName, sufix);
+	sprintf_s(*fileName, 256, "%s\\%s_%s.%s", cur_dir, curTime, nodeName, sufix);
 	DBG("fileName = %s cur_dir = %s", *fileName, cur_dir);
 
-	time_t times = time(NULL);
-	struct tm* utcTime = gmtime(&times);
-	char timeStr[64];
-	int timeStrLen = sprintf(timeStr, "%04d%02d%02dT%02d%02d%02dZ",
-		utcTime->tm_year + 1900, utcTime->tm_mon + 1, utcTime->tm_mday, utcTime->tm_hour, utcTime->tm_min, utcTime->tm_sec);
-	time_t tt = time(NULL);
-	tm* t = localtime(&tt);
-	DBG("Current Time : %d-%02d-%02d %02d:%02d:%02d\n",
-		t->tm_year + 1900,
-		t->tm_mon + 1,
-		t->tm_mday,
-		t->tm_hour,
-		t->tm_min,
-		t->tm_sec);
+	/**获取日历时间**/
+	time_t nowtime;
+	nowtime = time(NULL);
+	printf("nowtime = %lld \n", nowtime);
+
+	/**获取当前系统时间**/
+	struct tm *local = new tm;
+	localtime_s(local, &nowtime);
+
+	/**获取格林威治时间**/
+	gmtime_s(local, &nowtime); //https://blog.csdn.net/li_wen01/article/details/80348868
+	int timeStrLen = sprintf_s(curTime, 64, "%04d%02d%02dT%02d%02d%02dZ",
+		local->tm_year + 1900, local->tm_mon + 1, local->tm_mday, local->tm_hour, local->tm_min, local->tm_sec);
+
+	DBG("Current Time : %s", curTime);
 
 	return;
 }
@@ -630,12 +646,11 @@ void getTimeAndFileName(const char * nodeName, char *sufix, char **fileName)
 int read_from_file(const char *cFileName, const char * mode, char** Content)
 {
 	DBG("reading file from %s with mode %s ..", cFileName, mode);
-	FILE* pFile = fopen(cFileName, mode);
 	int fileSize = 0;
-	if (pFile == NULL)
-	{
+	FILE* pFile = NULL;
+	int ret = fopen_s(&pFile, cFileName, mode);
+	if (ret != 0) {
 		fprintf(stderr, "error: not found: %s\n", cFileName);
-		return 0;
 	}
 	else if (pFile != NULL)
 	{
@@ -685,7 +700,13 @@ void write_data_to_file(const char *cFileName, const char * mode, char** Content
 	DBG("saving file to %s with mode %s size=%d ..", cFileName, mode, size);
 	if (size == 0)
 		return;
-	FILE* file = fopen(cFileName, mode);
+	FILE* file;
+	int ret = fopen_s(&file, cFileName, mode);
+	if (ret != 0)
+	{
+		DBG("open file %s fail", cFileName);
+		return;
+	}
 	int real_write_bytes = 0;
 	if (strncmp("wb", mode, 2) == 0)
 	{
@@ -1167,4 +1188,3 @@ RETRY:
 	}
 #endif 
 }
-
